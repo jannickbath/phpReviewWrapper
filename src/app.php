@@ -6,6 +6,7 @@ session_start();
 $username = $_POST["username"] ?? false;
 $password = $_POST["password"] ?? false;
 $forum = isset($_POST["forum-active"]) ?? false;
+$deletePostList = $_POST["delete-post-list"] ?? false;
 $_SESSION["loggedIn"] = ($_SESSION["loggedIn"] ?? false);
 $_SESSION["username"] = ($_SESSION["username"] ?? false);
 
@@ -51,6 +52,26 @@ if (isset($_POST["message-content"])) {
 	$arr = json_decode($_POST["message-content"]);
 	foreach ($arr as $element => $info) {
 		$db->exec("INSERT INTO messages (element, message, author) VALUES ('$element', '$info[0]', '$info[1]');");
+	}
+}
+
+// Fetch Entries
+function getEntries() {
+	$db = new SQLite3("./database/messages.db");
+	$entries = $db->query("SELECT * FROM messages");
+	$messages = [];
+
+	while ($row = $entries->fetchArray()) {
+		array_push($messages, ["element" => $row["element"], "message" => $row["message"], "author" => $row["author"], "id" => $row["id"]]);
+	}
+	return $messages;
+}
+
+// Delete Posts
+if ($deletePostList) {
+	$data = explode(",", $deletePostList);
+	foreach ($data as $postId) {
+		$db->exec("DELETE FROM messages WHERE id=$postId");
 	}
 }
 
@@ -123,7 +144,7 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 
 		<!-- Forum-Button -->
 		<form action="<?=$actual_link;?>" method="POST" class="bg-red-200 left-2 bottom-5 fixed rounded-md hover:bg-red-400">
-			<button class="p-2 rounded-md forum-button pointer-events-none" title="Open the forum" type="submit">
+			<button class="p-2 rounded-md forum-button" title="Open the forum" type="submit">
 				<img src="./assets/icons/chat.png" class="h-5 w-5" alt="">
 			</button>
 			<input type="text" class="hidden" name="forum-active">
@@ -145,9 +166,39 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 			<p></p>
 		</div>
 
+		<!-- Forum -->
 		<?php if ($forum): ?>
-			<div class="forum absolute left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] bg-white z-[200]">
-				<h1>Hello World FORUM</h1>
+			<div class="forum fixed left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] bg-white z-[200] w-8/12 h-[600px] rounded-sm p-4 flex flex-col justify-between">
+				<div class="flex-grow">
+					<h2 class="w-fit mx-auto text-3xl mb-5">Aktuelle Hinweise</h2>
+
+					<!-- Messages -->
+					<ul class="grid gap-3 grid-cols-4 child:bg-slate-300 child:rounded-md child:p-2 child:relative child:transition-colors">
+						<?php foreach (getEntries() as $item => $element): ?>
+							<li>
+								<h4 class="text-2xl"><?=$element["element"]?><span class="text-sm ml-2">(<?=$element["author"]?>)</span></h4>
+								<p class="text-lg"><?=$element["message"]?></p>
+								<span class="hidden" aria-hidden="true" id="post-id"><?=$element["id"]?></span>
+								<button class="absolute top-0 right-0 py-1 px-2 delete-post" title="delete message">x</button>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				</div>
+
+				<div class="footer flex justify-end">
+					<!-- Delete Confirm Button -->
+					<form action="<?=$actual_link?>" method="POST">
+						<button class="bg-red-200 text-red-500 font-bold rounded-md px-3 py-2 hover:bg-red-500 hover:text-red-200 transition-colors hidden" id="confirm-delete">Delete Posts</button>
+						<input type="text" name="delete-post-list" id="delete-post-list" class="hidden">
+					</form>
+				</div>
+
+				<!-- Close Form (forces page-refresh) -->
+				<form action="" method="POST">
+					<button id="close-forum" class="absolute right-3 top-3 w-fit" type="submit">
+						<img src="./assets/icons/cross.png" alt="" class="w-5 h-5">
+					</button>
+				</form>
 			</div>
 		<?php endif; ?>
 
@@ -169,6 +220,7 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 		activeElement = "";
 		itemList = {};
 		icons = ["./assets/icons/edit.png", "./assets/icons/cross.png"];
+		deleteQueue = [];
 
 		document.querySelector(".edit-button").onclick = (event) => {
 			editActive = !editActive;
@@ -259,6 +311,22 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 			document.querySelector("#submitForm input").value = JSON.stringify(itemList);
 			console.log(itemList);
 		}
+
+		document.querySelectorAll(".delete-post").forEach(button => {
+			button.onclick = (e) => {
+				const id = e.target.parentElement.querySelector("span.hidden").innerText;
+				if (!deleteQueue.includes(id)) {
+					deleteQueue.push(id);
+				}
+				e.target.parentElement.style.setProperty("background-color", "red", "important");
+
+				if (deleteQueue.length > 0) {
+					document.getElementById("confirm-delete").style.setProperty("display", "block", "important");
+				}
+				// console.log(deleteQueue);
+				document.getElementById("delete-post-list").value = deleteQueue;
+			}
+		});
 	</script>
 </body>
 </html>
