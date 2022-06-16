@@ -173,12 +173,17 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 					<h2 class="w-fit mx-auto text-3xl mb-5">Aktuelle Hinweise</h2>
 
 					<!-- Messages -->
-					<ul class="grid gap-3 grid-cols-4 child:bg-slate-300 child:rounded-md child:p-2 child:relative child:transition-colors">
+					<ul class="grid gap-3 grid-cols-3 child:bg-slate-300 child:rounded-md child:p-2 child:relative child:transition-colors">
 						<?php foreach (getEntries() as $item => $element): ?>
 							<li>
-								<h4 class="text-2xl"><?=$element["element"]?><span class="text-sm ml-2">(<?=$element["author"]?>)</span></h4>
-								<p class="text-lg"><?=$element["message"]?></p>
-								<span class="hidden" aria-hidden="true" id="post-id"><?=$element["id"]?></span>
+								<a href="#<?=$element['element']?>1">
+									<div class="flex items-center gap-2">
+										<h4 class="text-2xl"><?=$element["element"]?></h4>
+										<span class="text-sm">(<?=$element["author"]?>)</span>
+									</div>
+									<p class="text-lg"><?=$element["message"]?></p>
+									<span class="hidden" aria-hidden="true" id="post-id"><?=$element["id"]?></span>
+								</a>
 								<button class="absolute top-0 right-0 py-1 px-2 delete-post" title="delete message">x</button>
 							</li>
 						<?php endforeach; ?>
