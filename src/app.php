@@ -325,6 +325,7 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 			console.log(itemList);
 		}
 
+		//Adds selected posts to delete queue
 		document.querySelectorAll(".delete-post").forEach(button => {
 			button.onclick = (e) => {
 				const id = e.target.parentElement.querySelector("span.hidden").innerText;
@@ -352,6 +353,7 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 			});
 		});
 
+		// Adds indicator to "jumped" element
 		document.querySelectorAll(".form-element a").forEach((anchor) => {
 			const dest = anchor.getAttribute("href").replace("#", "");
 

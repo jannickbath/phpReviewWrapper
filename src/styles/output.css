@@ -997,8 +997,30 @@ body, html {
   height: 100%;
   position: absolute;
   left:0;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 0;
+  z-index: 1;
+  -webkit-animation:slide-right 0.3s linear both;
+          animation:slide-right 0.3s linear both
+}
+
+@-webkit-keyframes slide-right{
+  0%{
+    transform:translateX(-100px)
+  }
+
+  100%{
+    transform:translateX(0px)
+  }
+}
+
+@keyframes slide-right{
+  0%{
+    transform:translateX(-100px)
+  }
+
+  100%{
+    transform:translateX(0px)
+  }
 }
 
 .blue-indicator, .red-indicator, .jump-indicator {
