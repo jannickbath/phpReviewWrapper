@@ -147,7 +147,7 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 		</div>
 
 		<!-- Forum-Button -->
-		<form action="<?= $actual_link; ?>" method="POST" class="bg-red-200 left-2 bottom-5 fixed rounded-md hover:bg-red-400">
+		<form action="<?= $actual_link; ?>" method="POST" class="bg-red-200 left-2 bottom-5 fixed rounded-md hover:bg-red-400 z-10">
 			<button class="p-2 rounded-md forum-button" title="Open the forum" type="submit">
 				<img src="./assets/icons/chat.png" class="h-5 w-5" alt="">
 			</button>
@@ -191,6 +191,9 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 								<button class="absolute top-0 right-0 py-1 px-2 delete-post" title="delete message">x</button>
 							</li>
 						<?php endforeach; ?>
+						<?php if (empty(getEntries())): ?>
+							<h3 class="pointer-events-none">Derzeit sind keine Einträge vorhanden!</h3>
+						<?php endif; ?>
 					</ul>
 				</div>
 
@@ -353,20 +356,6 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 			});
 		});
 
-		// Adds indicator to "jumped" element
-		document.querySelectorAll(".form-element a").forEach((anchor) => {
-			const dest = anchor.getAttribute("href").replace("#", "");
-
-			anchor.onclick = () => {
-				divs.forEach(div => {
-					const id = div.getAttribute("id");
-					div.classList.remove("jump-indicator");
-					if (id == dest) {
-						div.classList.add("jump-indicator");
-					}
-				});
-			}
-		});
 	</script>
 </body>
 

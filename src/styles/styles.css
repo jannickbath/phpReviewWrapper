@@ -35,7 +35,7 @@ body, html {
   bottom: 0;
 }
 
-.jump-indicator::before{
+:target::before {
   content: "";
   background-color: yellow;
   width: 100px;
@@ -47,6 +47,10 @@ body, html {
   animation:slide-right 0.3s linear both}@keyframes slide-right{0%{transform:translateX(-100px)}100%{transform:translateX(0px)}
 }
 
-.blue-indicator, .red-indicator, .jump-indicator {
+:target {
+  position: relative;
+}
+
+.blue-indicator, .red-indicator {
   position: relative !important;
 }
