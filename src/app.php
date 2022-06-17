@@ -1,4 +1,4 @@
-<?php 
+<?php
 // TODO Make this login a module for dynamic import
 // TODO Better Folder structure -> project folder
 session_start();
@@ -24,11 +24,10 @@ if (($username && $password)) {
 		if ($users[$username]["password"] == $password) {
 			$_SESSION["loggedIn"] = true;
 			$_SESSION["username"] = $username;
-		}else {
+		} else {
 			$wrongData = true;
 		}
-	}
-	else {
+	} else {
 		$disabled = true;
 	}
 }
@@ -56,7 +55,8 @@ if (isset($_POST["message-content"])) {
 }
 
 // Fetch Entries
-function getEntries() {
+function getEntries()
+{
 	$db = new SQLite3("./database/messages.db");
 	$entries = $db->query("SELECT * FROM messages");
 	$messages = [];
@@ -80,27 +80,31 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="UTF-8">
 	<title>Test Website</title>
 	<link rel="stylesheet" href="./styles/output.css">
 	<link rel="stylesheet" href="./project/dist/output.min.css">
 </head>
-<body <?php if (!$_SESSION["loggedIn"]) {echo 'class="bg-sunset overflow-hidden"';} ?>>
-	<?php if ($_SESSION["loggedIn"]): ?>
+
+<body <?php if (!$_SESSION["loggedIn"]) {
+			echo 'class="bg-sunset overflow-hidden"';
+		} ?>>
+	<?php if ($_SESSION["loggedIn"]) : ?>
 		<!-- TODO Dynamic File Import -->
 		<?php include "./project/src/pages/homepage/parsed.php" ?>
-	<?php else: ?>
+	<?php else : ?>
 		<!-- Login Form -->
 		<div class="wrapper w-full h-full grid place-items-center">
 			<div class="">
 				<h1 class="text-red-500 text-3xl text-center mb-5">Login</h1>
-				<form action="<?=$actual_link;?>" method="POST" name="loginForm" class="grid gap-y-2">
+				<form action="<?= $actual_link; ?>" method="POST" name="loginForm" class="grid gap-y-2">
 					<input type="text" name="username" class="border border-black h-8 rounded-md">
 					<input type="password" name="password" id="" class="border border-black h-8 rounded-md">
 					<button onclick="submit('loginForm')" class="p-1 rounded-md bg-slate-300 hover:bg-slate-400 w-fit px-3 ml-auto">Submit</button>
 				</form>
-				<?php if ($wrongData): ?>
+				<?php if ($wrongData) : ?>
 					<!-- Alert Wrong Data-->
 					<div class="bg-red-400 py-3 px-6 rounded-lg absolute bottom-0 right-0 alert slide-top transition-opacity">
 						<p>Es ist etwas schiefgelaufen! Bitte überprüfen sie ihre Eingabe.</p>
@@ -109,7 +113,7 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 						</button>
 					</div>
 				<?php endif; ?>
-				<?php if ($disabled): ?>
+				<?php if ($disabled) : ?>
 					<!-- Alert Wrong Data-->
 					<div class="bg-orange-400 py-3 px-6 rounded-lg absolute bottom-0 right-0 alert slide-top transition-opacity">
 						<p>Ihr Benutzer ist derzeit deaktiviert! Bitte wenden sie sich an einen Administrator.</p>
@@ -120,12 +124,12 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 				<?php endif; ?>
 			</div>
 		</div>
-	<?php endif;?>
+	<?php endif; ?>
 
-	<?php if ($_SESSION["loggedIn"]): ?>
+	<?php if ($_SESSION["loggedIn"]) : ?>
 		<div class="wrapper flex fixed right-10 bottom-5 gap-2 items-center">
 			<!-- Submit Button -->
-			<form action="<?=$actual_link;?>" method="POST" id="submitForm" name="submitForm" class="w-fit h-full bg-green-400 rounded-md">
+			<form action="<?= $actual_link; ?>" method="POST" id="submitForm" name="submitForm" class="w-fit h-full bg-green-400 rounded-md">
 				<input type="text" class="hidden" name="message-content">
 				<button class="bg-green-400 hover:bg-green-600 p-2 rounded-md submit-button hidden" type="submit" title="submit">
 					<img src="./assets/icons/submit.png" class="h-5 w-5" alt="">
@@ -136,14 +140,14 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 				<img src="./assets/icons/edit.png" class="h-5 w-5" alt="">
 			</button>
 			<!-- Log out -->
-			<form action="<?=$actual_link;?>" method="POST" name="logoutForm" class="w-fit h-fit">
+			<form action="<?= $actual_link; ?>" method="POST" name="logoutForm" class="w-fit h-fit">
 				<input type="text" name="logout" class="hidden">
 				<button onclick="submit('logoutForm')" class="bg-red-200 p-2 rounded-md hover:bg-red-400 mx-auto">Logout</button>
 			</form>
 		</div>
 
 		<!-- Forum-Button -->
-		<form action="<?=$actual_link;?>" method="POST" class="bg-red-200 left-2 bottom-5 fixed rounded-md hover:bg-red-400">
+		<form action="<?= $actual_link; ?>" method="POST" class="bg-red-200 left-2 bottom-5 fixed rounded-md hover:bg-red-400">
 			<button class="p-2 rounded-md forum-button" title="Open the forum" type="submit">
 				<img src="./assets/icons/chat.png" class="h-5 w-5" alt="">
 			</button>
@@ -167,22 +171,22 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 		</div>
 
 		<!-- Forum -->
-		<?php if ($forum): ?>
+		<?php if ($forum) : ?>
 			<div class="forum fixed left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] bg-white z-[200] w-8/12 h-[600px] rounded-sm p-4 flex flex-col justify-between">
 				<div class="flex-grow">
 					<h2 class="w-fit mx-auto text-3xl mb-5">Aktuelle Hinweise</h2>
 
 					<!-- Messages -->
-					<ul class="grid gap-3 grid-cols-3 child:bg-slate-300 child:rounded-md child:p-2 child:relative child:transition-colors">
-						<?php foreach (getEntries() as $item => $element): ?>
-							<li>
-								<a href="#<?=$element['element']?>1">
+					<ul class="grid gap-3 grid-cols-3 child:bg-slate-300 child-hover:bg-slate-400 child:rounded-md child:p-2 child:relative child:transition-colors child-hover:shadow-md">
+						<?php foreach (getEntries() as $item => $element) : ?>
+							<li title="Navigate to element" class="form-element">
+								<a href="#<?= $element['element'] ?>">
 									<div class="flex items-center gap-2">
-										<h4 class="text-2xl"><?=$element["element"]?></h4>
-										<span class="text-sm">(<?=$element["author"]?>)</span>
+										<h4 class="text-2xl"><?= $element["element"] ?></h4>
+										<span class="text-sm">(<?= $element["author"] ?>)</span>
 									</div>
-									<p class="text-lg"><?=$element["message"]?></p>
-									<span class="hidden" aria-hidden="true" id="post-id"><?=$element["id"]?></span>
+									<p class="text-lg"><?= $element["message"] ?></p>
+									<span class="hidden" aria-hidden="true" id="post-id"><?= $element["id"] ?></span>
 								</a>
 								<button class="absolute top-0 right-0 py-1 px-2 delete-post" title="delete message">x</button>
 							</li>
@@ -192,7 +196,7 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 
 				<div class="footer flex justify-end">
 					<!-- Delete Confirm Button -->
-					<form action="<?=$actual_link?>" method="POST">
+					<form action="<?= $actual_link ?>" method="POST">
 						<button class="bg-red-200 text-red-500 font-bold rounded-md px-3 py-2 hover:bg-red-500 hover:text-red-200 transition-colors hidden" id="confirm-delete">Delete Posts</button>
 						<input type="text" name="delete-post-list" id="delete-post-list" class="hidden">
 					</form>
@@ -220,12 +224,13 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 			}
 		});
 
-		editActive = false;
-		toggled = false;
-		activeElement = "";
-		itemList = {};
-		icons = ["./assets/icons/edit.png", "./assets/icons/cross.png"];
-		deleteQueue = [];
+		var editActive = false;
+		var toggled = false;
+		var activeElement = "";
+		var itemList = {};
+		var deleteQueue = [];
+		const icons = ["./assets/icons/edit.png", "./assets/icons/cross.png"];
+		const divs = document.querySelectorAll("div");
 
 		document.querySelector(".edit-button").onclick = (event) => {
 			editActive = !editActive;
@@ -233,15 +238,14 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 			//toggle visibility of submit-button
 			if (editActive) {
 				document.querySelector(".submit-button").style.setProperty("display", "block", "important");
-			}else {
+			} else {
 				document.querySelector(".submit-button").style.setProperty("display", "none", "important");
 			}
 
 			//toggle icon src
-			event.target.src = icons[+ editActive];
+			event.target.src = icons[+editActive];
 
 			//make every ce_element clickable
-			const divs = document.querySelectorAll("div");
 			divs.forEach((element) => {
 				element.classList.forEach((classname) => {
 					if (classname.startsWith("ce_")) {
@@ -252,13 +256,16 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 									// element.style.setProperty("background-color", "red", "important");
 									element.classList.add("red-indicator");
 									if (!(classname in itemList)) {
-										itemList = {...itemList, [classname]: []}
+										itemList = {
+											...itemList,
+											[classname]: []
+										}
 									}
 									document.querySelector(".message-wrapper").style.setProperty("display", "flex", "important");
 									document.querySelector(".message-wrapper textarea").focus();
 									document.querySelector(".message-wrapper textarea").select();
 									activeElement = classname;
-								}else {
+								} else {
 									// element.style.removeProperty("background-color");
 									element.classList.remove("red-indicator");
 									element.classList.remove("blue-indicator");
@@ -291,16 +298,17 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 						}
 
 						// border-indicator on hover
-						element.onmouseenter= () => {
+						element.onmouseenter = () => {
 							if (editActive) {
 								element.style.setProperty("border", "3px solid yellow", "important");
 							}
 						}
-						element.onmouseleave= () => {
+						element.onmouseleave = () => {
 							if (editActive) {
 								element.style.removeProperty("border");
 							}
 						}
+
 					}
 				});
 			});
@@ -310,7 +318,7 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 			const messageBoxVal = document.getElementById("message-bug").value;
 			const messageWrapper = document.querySelector(".message-wrapper");
 
-			itemList[activeElement] = [messageBoxVal, '<?=$_SESSION["username"];?>'];
+			itemList[activeElement] = [messageBoxVal, '<?= $_SESSION["username"]; ?>'];
 			messageWrapper.style.removeProperty("display", "none", "important");
 
 			document.querySelector("#submitForm input").value = JSON.stringify(itemList);
@@ -332,6 +340,32 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 				document.getElementById("delete-post-list").value = deleteQueue;
 			}
 		});
+
+		// Add Id's for each content element (for navigation) -> see forum
+		divs.forEach((element) => {
+			element.classList.forEach((classname) => {
+				if (classname.startsWith("ce_")) {
+					if (!document.getElementById(classname) ?? false) {
+						element.setAttribute("id", classname);
+					}
+				}
+			});
+		});
+
+		document.querySelectorAll(".form-element a").forEach((anchor) => {
+			const dest = anchor.getAttribute("href").replace("#", "");
+
+			anchor.onclick = () => {
+				divs.forEach(div => {
+					const id = div.getAttribute("id");
+					div.classList.remove("jump-indicator");
+					if (id == dest) {
+						div.classList.add("jump-indicator");
+					}
+				});
+			}
+		});
 	</script>
 </body>
+
 </html>
