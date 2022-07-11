@@ -86,8 +86,6 @@ if ($deletePostList) {
 	}
 }
 
-$actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -114,7 +112,7 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 		<div class="wrapper w-full h-full grid place-items-center">
 			<div class="">
 				<h1 class="text-red-500 text-3xl text-center mb-5">Login</h1>
-				<form action="<?= $actual_link; ?>" method="POST" name="loginForm" class="grid gap-y-2">
+				<form action="./" method="POST" name="loginForm" class="grid gap-y-2">
 					<input type="text" name="username" class="border border-black h-8 rounded-md">
 					<input type="password" name="password" id="" class="border border-black h-8 rounded-md">
 					<button onclick="submit('loginForm')" class="p-1 rounded-md bg-slate-300 hover:bg-slate-400 w-fit px-3 ml-auto">Submit</button>
@@ -144,7 +142,7 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 	<?php if ($_SESSION["loggedIn"]) : ?>
 		<div class="wrapper flex fixed right-10 bottom-5 gap-2 items-center">
 			<!-- Submit Button -->
-			<form action="<?= $actual_link; ?>" method="POST" id="submitForm" name="submitForm" class="w-fit h-full bg-green-400 rounded-md">
+			<form action="./" method="POST" id="submitForm" name="submitForm" class="w-fit h-full bg-green-400 rounded-md">
 				<input type="text" class="hidden" name="message-content">
 				<button class="bg-green-400 hover:bg-green-600 p-2 rounded-md submit-button hidden" type="submit" title="submit">
 					<img src="./assets/icons/submit.png" class="h-5 w-5" alt="">
@@ -155,7 +153,7 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 				<img src="./assets/icons/edit.png" class="h-5 w-5" alt="">
 			</button>
 			<!-- Log out -->
-			<form action="<?= $actual_link; ?>" method="POST" name="logoutForm" class="w-fit h-fit">
+			<form action="./" method="POST" name="logoutForm" class="w-fit h-fit">
 				<input type="text" name="logout" class="hidden">
 				<button onclick="submit('logoutForm')" class="bg-red-200 p-2 rounded-md hover:bg-red-400 mx-auto">Logout</button>
 			</form>
@@ -163,7 +161,7 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 
 		<div class="fixed bottom-5 left-2 flex gap-2">
 			<!-- Seitenübersicht-Button -->
-			<form action="<?= $actual_link; ?>" method="POST" class="bg-red-200 rounded-md hover:bg-red-400 z-10">
+			<form action="./" method="POST" class="bg-red-200 rounded-md hover:bg-red-400 z-10">
 				<button class="p-2 rounded-md forum-button" title="Open the Page Overview" type="submit">
 					<img src="./assets/icons/pages.png" class="h-5 w-5" alt="">
 				</button>
@@ -171,7 +169,7 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 			</form>
 
 			<!-- Forum-Button -->
-			<form action="<?= $actual_link; ?>" method="POST" class="bg-red-200 rounded-md hover:bg-red-400 z-10">
+			<form action="./" method="POST" class="bg-red-200 rounded-md hover:bg-red-400 z-10">
 				<button class="p-2 rounded-md forum-button" title="Open the forum" type="submit">
 					<img src="./assets/icons/chat.png" class="h-5 w-5" alt="">
 				</button>
@@ -224,7 +222,7 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 
 				<div class="footer flex justify-end">
 					<!-- Delete Confirm Button -->
-					<form action="<?= $actual_link ?>" method="POST">
+					<form action="./" method="POST">
 						<button class="bg-red-200 text-red-500 font-bold rounded-md px-3 py-2 hover:bg-red-500 hover:text-red-200 transition-colors hidden" id="confirm-delete">Delete Posts</button>
 						<input type="text" name="delete-post-list" id="delete-post-list" class="hidden">
 					</form>
