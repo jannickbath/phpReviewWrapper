@@ -6,9 +6,12 @@ session_start();
 $username = $_POST["username"] ?? false;
 $password = $_POST["password"] ?? false;
 $forum = isset($_POST["forum-active"]) ?? false;
+$seiten = isset($_POST["seiten-active"]) ?? false;
 $deletePostList = $_POST["delete-post-list"] ?? false;
 $_SESSION["loggedIn"] = ($_SESSION["loggedIn"] ?? false);
 $_SESSION["username"] = ($_SESSION["username"] ?? false);
+
+$_SESSION["newPage"] = ($_SESSION["newPage"] ?? null);
 
 $wrongData = false;
 $disabled = false;
@@ -32,6 +35,11 @@ if (($username && $password)) {
 	}
 }
 
+// Page
+if (isset($_POST["navigate-page"])) {
+	$_SESSION["newPage"] = $_POST["navigate-page"];
+}
+
 //Logout
 if (isset($_POST["logout"])) {
 	$_SESSION["loggedIn"] = false;
@@ -43,22 +51,25 @@ $db->exec("CREATE TABLE IF NOT EXISTS messages(
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	element TEXT NOT NULL DEFAULT '',
 	message TEXT NOT NULL DEFAULT '',
-	author TEXT NOT NULL DEFAULT ''
+	author TEXT NOT NULL DEFAULT '',
+	page TEXT NOT NULL DEFAULT ''
 )");
 
 // Save message-content to database
 if (isset($_POST["message-content"])) {
 	$arr = json_decode($_POST["message-content"]);
+	$newPage = $_SESSION["newPage"];
 	foreach ($arr as $element => $info) {
-		$db->exec("INSERT INTO messages (element, message, author) VALUES ('$element', '$info[0]', '$info[1]');");
+		$db->exec("INSERT INTO messages (element, message, author, page) VALUES ('$element', '$info[0]', '$info[1]', '$newPage');");
 	}
 }
 
 // Fetch Entries
 function getEntries()
 {
+	$currentPage = $_SESSION["newPage"];
 	$db = new SQLite3("./database/messages.db");
-	$entries = $db->query("SELECT * FROM messages");
+	$entries = $db->query("SELECT * FROM messages WHERE page='$currentPage'");
 	$messages = [];
 
 	while ($row = $entries->fetchArray()) {
@@ -92,8 +103,12 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 			echo 'class="bg-sunset overflow-hidden"';
 		} ?>>
 	<?php if ($_SESSION["loggedIn"]) : ?>
-		<!-- TODO Dynamic File Import -->
-		<?php include "./project/src/pages/homepage/parsed.php" ?>
+		<?php if (isset($_SESSION["newPage"])) : ?>
+			<!-- TODO Dynamic File Import -->
+			<?php include $_SESSION["newPage"]?>
+		<?php else : ?>
+			<?php include "./project/src/pages/homepage/parsed.php";?>
+		<?php endif; ?>
 	<?php else : ?>
 		<!-- Login Form -->
 		<div class="wrapper w-full h-full grid place-items-center">
@@ -146,13 +161,23 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 			</form>
 		</div>
 
-		<!-- Forum-Button -->
-		<form action="<?= $actual_link; ?>" method="POST" class="bg-red-200 left-2 bottom-5 fixed rounded-md hover:bg-red-400 z-10">
-			<button class="p-2 rounded-md forum-button" title="Open the forum" type="submit">
-				<img src="./assets/icons/chat.png" class="h-5 w-5" alt="">
-			</button>
-			<input type="text" class="hidden" name="forum-active">
-		</form>
+		<div class="fixed bottom-5 left-2 flex gap-2">
+			<!-- Seitenübersicht-Button -->
+			<form action="<?= $actual_link; ?>" method="POST" class="bg-red-200 rounded-md hover:bg-red-400 z-10">
+				<button class="p-2 rounded-md forum-button" title="Open the Page Overview" type="submit">
+					<img src="./assets/icons/pages.png" class="h-5 w-5" alt="">
+				</button>
+				<input type="text" class="hidden" name="seiten-active">
+			</form>
+
+			<!-- Forum-Button -->
+			<form action="<?= $actual_link; ?>" method="POST" class="bg-red-200 rounded-md hover:bg-red-400 z-10">
+				<button class="p-2 rounded-md forum-button" title="Open the forum" type="submit">
+					<img src="./assets/icons/chat.png" class="h-5 w-5" alt="">
+				</button>
+				<input type="text" class="hidden" name="forum-active">
+			</form>
+		</div>
 
 		<!-- Message Box -->
 		<div class="message-wrapper fixed bg-slate-500 top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%] w-[500px] h-[250px] rounded-md justify-center hidden text-lg z-[150]">
@@ -203,6 +228,46 @@ $actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 						<button class="bg-red-200 text-red-500 font-bold rounded-md px-3 py-2 hover:bg-red-500 hover:text-red-200 transition-colors hidden" id="confirm-delete">Delete Posts</button>
 						<input type="text" name="delete-post-list" id="delete-post-list" class="hidden">
 					</form>
+				</div>
+
+				<!-- Close Form (forces page-refresh) -->
+				<form action="" method="POST">
+					<button id="close-forum" class="absolute right-3 top-3 w-fit" type="submit">
+						<img src="./assets/icons/cross.png" alt="" class="w-5 h-5">
+					</button>
+				</form>
+			</div>
+		<?php endif; ?>
+
+		<?php if ($seiten): ?>
+			<div class="forum fixed left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] bg-white z-[200] w-8/12 h-[600px] rounded-sm p-4 flex flex-col justify-between">
+				<div class="flex-grow">
+					<h2 class="w-fit mx-auto text-3xl mb-5">Seitenübersicht</h2>
+
+					<!-- Seiten -->
+					<ul class="flex gap-2 child:grid child:gap-2 child:flex-grow flex-wrap">
+						<li>
+							<h3 class="title text-center text-2xl font-bold">Hompage</h3>
+							<iframe src="./project/src/pages/testPage.preview.html" frameborder="0" class="mx-auto"></iframe>
+							<form action="./" method="POST">
+								<input type="text" class="hidden" value="./project/src/pages/testPage.php" name="navigate-page">
+								<button type="submit" class="text-center text-blue-500 hover:text-blue-300">Navigieren</button>
+							</form>
+						</li>
+						<li>
+							<h3 class="title text-center text-2xl font-bold">Detail</h3>
+							<iframe src="./project/src/pages/homepage/parsed.preview.html" frameborder="0" class="mx-auto"></iframe>
+							<form action="./" method="POST">
+								<input type="text" class="hidden" value="./project/src/pages/homepage/parsed.php" name="navigate-page">
+								<button type="submit" class="text-center text-blue-500 hover:text-blue-300">Navigieren</button>
+							</form>
+						</li>
+						<li>
+							<h3 class="title text-center text-2xl font-bold">Detail</h3>
+							<iframe src="https://www.google.com" frameborder="0" class="mx-auto"></iframe>
+							<a href="#" class="text-center text-blue-500 hover:text-blue-300">Navigieren</a>
+						</li>
+					</ul>
 				</div>
 
 				<!-- Close Form (forces page-refresh) -->
