@@ -21,6 +21,21 @@ $users = [
 	'demouser' => ['password' => 'demopass', 'id' => 0, 'disabled' => false]
 ];
 
+$basePath = "./project/src/pages";
+$pages = array_diff(scandir($basePath), array(".", ".."));
+$pageList = [];
+$paths = [];
+
+foreach ($pages as $page) {
+	$files = array_diff(scandir($basePath . "/" . $page), array(".", ".."));
+	foreach ($files as $file) {
+		$fullPath = join("/", [$basePath, $page, $file]);
+		array_push($paths, $fullPath);
+	}
+	array_push($pageList, $paths);
+	$paths = [];
+}
+
 //Login
 if (($username && $password)) {
 	if (!$users[$username]["disabled"]) {
@@ -244,27 +259,16 @@ if ($deletePostList) {
 
 					<!-- Seiten -->
 					<ul class="flex gap-2 child:grid child:gap-2 child:flex-grow flex-wrap">
-						<li>
-							<h3 class="title text-center text-2xl font-bold">Hompage</h3>
-							<iframe src="./project/src/pages/testPage.preview.html" frameborder="0" class="mx-auto"></iframe>
-							<form action="./" method="POST">
-								<input type="text" class="hidden" value="./project/src/pages/testPage.php" name="navigate-page">
-								<button type="submit" class="text-center text-blue-500 hover:text-blue-300">Navigieren</button>
-							</form>
-						</li>
-						<li>
-							<h3 class="title text-center text-2xl font-bold">Detail</h3>
-							<iframe src="./project/src/pages/homepage/parsed.preview.html" frameborder="0" class="mx-auto"></iframe>
-							<form action="./" method="POST">
-								<input type="text" class="hidden" value="./project/src/pages/homepage/parsed.php" name="navigate-page">
-								<button type="submit" class="text-center text-blue-500 hover:text-blue-300">Navigieren</button>
-							</form>
-						</li>
-						<li>
-							<h3 class="title text-center text-2xl font-bold">Detail</h3>
-							<iframe src="https://www.google.com" frameborder="0" class="mx-auto"></iframe>
-							<a href="#" class="text-center text-blue-500 hover:text-blue-300">Navigieren</a>
-						</li>
+						<?php foreach ($pageList as $page) : ?>
+							<li>
+								<h3 class="title text-center text-2xl font-bold"><?=basename($page[0], ".html");?></h3>
+								<iframe src="<?=$page[0]?>" frameborder="0" class="mx-auto w-full"></iframe>
+								<form action="./" method="POST">
+									<input type="text" class="hidden" value="<?=$page[1]?>" name="navigate-page">
+									<button type="submit" class="text-center text-blue-500 hover:text-blue-300">Navigieren</button>
+								</form>
+							</li>
+						<?php endforeach; ?>
 					</ul>
 				</div>
 
