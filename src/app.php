@@ -7,6 +7,7 @@ $username = $_POST["username"] ?? false;
 $password = $_POST["password"] ?? false;
 $forum = isset($_POST["forum-active"]) ?? false;
 $seiten = isset($_POST["seiten-active"]) ?? false;
+$page_creation_active = isset($_POST["page-creation-active"]) ?? false;
 $deletePostList = $_POST["delete-post-list"] ?? false;
 $_SESSION["loggedIn"] = ($_SESSION["loggedIn"] ?? false);
 $_SESSION["username"] = ($_SESSION["username"] ?? false);
@@ -15,10 +16,11 @@ $_SESSION["newPage"] = ($_SESSION["newPage"] ?? null);
 
 $wrongData = false;
 $disabled = false;
+$devMode = false;
 
 //User Array 
 $users = [
-	'demouser' => ['password' => 'demopass', 'id' => 0, 'disabled' => false]
+	'demouser' => ['password' => 'demopass', 'id' => 0, 'disabled' => false, 'developer' => true]
 ];
 
 $basePath = "./project/src/pages";
@@ -36,6 +38,61 @@ foreach ($pages as $page) {
 	$paths = [];
 }
 
+// Page Generator
+$filename = "generatedPage";
+$compList = ["navbar", "text", "contact_inline"];
+
+$compPath = "./project/src/components";
+$pagePath = "./project/src/pages";
+$stylesheet = "../../../dist/output.css";
+$javascript = "../../../dist/main.min.js";
+
+$codeList = [];
+
+$boilerplateHTML_start = "
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\">
+	<link rel=\"stylesheet\" href=\"${stylesheet}\">
+    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <title>${filename}</title>
+</head>
+<body>
+";
+
+$boilerplateHTML_end = "
+<script src=\"${javascript}\"></script>
+</body>
+</html>
+";
+
+
+$components = array_diff(scandir($compPath), array(".", ".."));
+foreach ($compList as $component) {
+	if (in_array($component, $components)) {
+		preg_match("/(?<=<!-- start -->)(.*)(?=<!-- end -->)/s", file_get_contents($compPath . "/" . $component . "/" . "${component}.html"), $match);
+		$codeList = [...$codeList, $match[0]];
+	}
+}
+mkdir("${pagePath}/${filename}");
+
+//Write to files
+$generatedPage = fopen("${pagePath}/${filename}/${filename}.html", "w");
+$generatedPage_php = fopen("${pagePath}/${filename}/${filename}.php", "w");
+
+fwrite($generatedPage, $boilerplateHTML_start);
+foreach ($codeList as $code) {
+	fwrite($generatedPage, $code);
+	fwrite($generatedPage_php, $code);
+}
+fwrite($generatedPage, $boilerplateHTML_end);
+
+fclose($generatedPage);
+fclose($generatedPage_php);
+
+
 //Login
 if (($username && $password)) {
 	if (!$users[$username]["disabled"]) {
@@ -47,6 +104,14 @@ if (($username && $password)) {
 		}
 	} else {
 		$disabled = true;
+	}
+
+}
+
+//Keeps variables while navigating
+if ($_SESSION["loggedIn"]) {
+	if ($users[$_SESSION["username"]]["developer"]) {
+		$devMode = true;
 	}
 }
 
@@ -190,6 +255,16 @@ if ($deletePostList) {
 				</button>
 				<input type="text" class="hidden" name="forum-active">
 			</form>
+
+			<!-- Developer Settings -->
+			<?php if ($devMode) : ?> 
+			<form action="./" method="POST" class="bg-red-200 rounded-md hover:bg-red-400 z-10">
+				<button class="p-2 rounded-md forum-button" title="Developer Settings" type="submit">
+					<img src="./assets/icons/settings.png" class="h-5 w-5" alt="">
+				</button>
+				<input type="text" class="hidden" name="page-creation-active">
+			</form>
+			<?php endif; ?>
 		</div>
 
 		<!-- Message Box -->
@@ -252,12 +327,12 @@ if ($deletePostList) {
 			</div>
 		<?php endif; ?>
 
+		<!-- Seitenübersicht -->
 		<?php if ($seiten): ?>
 			<div class="forum fixed left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] bg-white z-[200] w-8/12 h-[600px] rounded-sm p-4 flex flex-col justify-between">
 				<div class="flex-grow">
 					<h2 class="w-fit mx-auto text-3xl mb-5">Seitenübersicht</h2>
 
-					<!-- Seiten -->
 					<ul class="flex gap-2 child:grid child:gap-2 child:flex-grow flex-wrap">
 						<?php foreach ($pageList as $page) : ?>
 							<li>
@@ -271,6 +346,20 @@ if ($deletePostList) {
 						<?php endforeach; ?>
 					</ul>
 				</div>
+
+				<!-- Close Form (forces page-refresh) -->
+				<form action="" method="POST">
+					<button id="close-forum" class="absolute right-3 top-3 w-fit" type="submit">
+						<img src="./assets/icons/cross.png" alt="" class="w-5 h-5">
+					</button>
+				</form>
+			</div>
+		<?php endif; ?>
+
+		<!-- Page Creation Tool -->
+		<?php if ($page_creation_active): ?>
+			<div class="forum fixed left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] bg-white z-[200] w-8/12 h-[600px] rounded-sm p-4 flex flex-col justify-between">
+				<h2>Hello World</h2>
 
 				<!-- Close Form (forces page-refresh) -->
 				<form action="" method="POST">
