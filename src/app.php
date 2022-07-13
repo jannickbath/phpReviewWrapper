@@ -1,6 +1,4 @@
 <?php
-// TODO Make this login a module for dynamic import
-// TODO Better Folder structure -> project folder
 session_start();
 
 $username = $_POST["username"] ?? false;
@@ -71,6 +69,10 @@ $boilerplateHTML_end = "
 </html>
 ";
 
+$boilerplatePHP_end = "
+<script src=\"${javascript}\"></script>
+";
+
 if (isset($filename) && isset($compList)) {
 	foreach ($compList as $component) {
 		if (in_array($component, $components)) {
@@ -90,9 +92,16 @@ if (isset($filename) && isset($compList)) {
 		fwrite($generatedPage_php, $code);
 	}
 	fwrite($generatedPage, $boilerplateHTML_end);
+	fwrite($generatedPage_php, $boilerplatePHP_end);
 
 	fclose($generatedPage);
 	fclose($generatedPage_php);
+
+	// Change Paths
+	$newContent = preg_replace('~((\.\.\/){3})+~', "./project/", file_get_contents("${pagePath}/${filename}/${filename}.php"));
+	$phpFile = fopen("${pagePath}/${filename}/${filename}.php", "w");
+	fwrite($phpFile, $newContent);
+	fclose($phpFile);
 }
 
 
@@ -223,7 +232,7 @@ if ($deletePostList) {
 	<?php endif; ?>
 
 	<?php if ($_SESSION["loggedIn"]) : ?>
-		<div class="wrapper flex fixed right-10 bottom-5 gap-2 items-center">
+		<div class="wrapper flex fixed right-10 bottom-5 gap-2 items-center z-[99999]">
 			<!-- Submit Button -->
 			<form action="./" method="POST" id="submitForm" name="submitForm" class="w-fit h-full bg-green-400 rounded-md">
 				<input type="text" class="hidden" name="message-content">
@@ -242,7 +251,7 @@ if ($deletePostList) {
 			</form>
 		</div>
 
-		<div class="fixed bottom-5 left-2 flex gap-2">
+		<div class="fixed bottom-5 left-2 flex gap-2 z-[99999]">
 			<!-- Seitenübersicht-Button -->
 			<form action="./" method="POST" class="bg-red-200 rounded-md hover:bg-red-400 z-10">
 				<button class="p-2 rounded-md forum-button" title="Open the Page Overview" type="submit">
@@ -557,8 +566,6 @@ if ($deletePostList) {
 			node.innerText = compSelection.value;
 			pageStructure.appendChild(node);
 		}
-
-		// TODO Add changePath Script to PHP (changes img paths)
 
 	</script>
 </body>
