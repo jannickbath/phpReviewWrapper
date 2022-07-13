@@ -39,13 +39,16 @@ foreach ($pages as $page) {
 }
 
 // Page Generator
-$filename = "generatedPage";
-$compList = ["navbar", "text", "contact_inline"];
+$filename = $_POST["pagename"] ?? null;
+$compList = $_POST["comps"] ?? null;
+$compList = explode(",", $compList);
 
 $compPath = "./project/src/components";
 $pagePath = "./project/src/pages";
 $stylesheet = "../../../dist/output.css";
 $javascript = "../../../dist/main.min.js";
+
+$components = array_diff(scandir($compPath), array(".", ".."));
 
 $codeList = [];
 
@@ -53,11 +56,11 @@ $boilerplateHTML_start = "
 <!DOCTYPE html>
 <html lang=\"en\">
 <head>
-    <meta charset=\"UTF-8\">
+	<meta charset=\"UTF-8\">
 	<link rel=\"stylesheet\" href=\"${stylesheet}\">
-    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">
-    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-    <title>${filename}</title>
+	<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">
+	<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+	<title>${filename}</title>
 </head>
 <body>
 ";
@@ -68,29 +71,29 @@ $boilerplateHTML_end = "
 </html>
 ";
 
-
-$components = array_diff(scandir($compPath), array(".", ".."));
-foreach ($compList as $component) {
-	if (in_array($component, $components)) {
-		preg_match("/(?<=<!-- start -->)(.*)(?=<!-- end -->)/s", file_get_contents($compPath . "/" . $component . "/" . "${component}.html"), $match);
-		$codeList = [...$codeList, $match[0]];
+if (isset($filename) && isset($compList)) {
+	foreach ($compList as $component) {
+		if (in_array($component, $components)) {
+			preg_match("/(?<=<!-- start -->)(.*)(?=<!-- end -->)/s", file_get_contents($compPath . "/" . $component . "/" . "${component}.html"), $match);
+			$codeList = [...$codeList, $match[0]];
+		}
 	}
+	mkdir("${pagePath}/${filename}");
+
+	//Write to files
+	$generatedPage = fopen("${pagePath}/${filename}/${filename}.html", "w");
+	$generatedPage_php = fopen("${pagePath}/${filename}/${filename}.php", "w");
+
+	fwrite($generatedPage, $boilerplateHTML_start);
+	foreach ($codeList as $code) {
+		fwrite($generatedPage, $code);
+		fwrite($generatedPage_php, $code);
+	}
+	fwrite($generatedPage, $boilerplateHTML_end);
+
+	fclose($generatedPage);
+	fclose($generatedPage_php);
 }
-mkdir("${pagePath}/${filename}");
-
-//Write to files
-$generatedPage = fopen("${pagePath}/${filename}/${filename}.html", "w");
-$generatedPage_php = fopen("${pagePath}/${filename}/${filename}.php", "w");
-
-fwrite($generatedPage, $boilerplateHTML_start);
-foreach ($codeList as $code) {
-	fwrite($generatedPage, $code);
-	fwrite($generatedPage_php, $code);
-}
-fwrite($generatedPage, $boilerplateHTML_end);
-
-fclose($generatedPage);
-fclose($generatedPage_php);
 
 
 //Login
@@ -358,8 +361,36 @@ if ($deletePostList) {
 
 		<!-- Page Creation Tool -->
 		<?php if ($page_creation_active): ?>
-			<div class="forum fixed left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] bg-white z-[200] w-8/12 h-[600px] rounded-sm p-4 flex flex-col justify-between">
-				<h2>Hello World</h2>
+			<div class="forum fixed left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] bg-white z-[200] w-8/12 h-[600px] rounded-sm p-4 flex flex-col">
+				<h2 class="mx-auto text-3xl text-blue-400">Page Generation Tool</h2>
+				<div class="">
+					<form action="./" method="POST">
+						<div class="select">
+							<label for="comp-selection">Choose a Component</label>
+							<select name="comp-selection" id="comp-selection">
+								<?php foreach($components as $component) : ?>
+									<option value="<?=$component?>"><?=$component?></option>
+								<?php endforeach; ?>
+							</select>
+						</div>
+						<button type="button" class="bg-lime-700 px-4 py-1 text-white rounded-md" id="add-component">Add +</button>
+
+
+						<!-- Submit Button -->
+						<div class="absolute bottom-5 right-5 flex gap-2">
+							<input type="text" class="border-2 rounded-sm" placeholder="Pagename" name="pagename" required>
+							<button type="submit" class="bg-lime-500 px-4 py-1 rounded-md border-2 border-lime-500 hover:bg-transparent transition-colors">Generate</button>
+							<input type="text" class="hidden" id="comp-transmitter" name="comps">
+						</div>
+					</form>
+				</div>
+
+				<div class="mx-auto flex-grow p-5 grid">
+					<ul id="page-structure" class="child:p-2 child:bg-violet-400 child:rounded-md flex flex-col gap-12 child:h-fit child:after:content-['↓'] child:after:absolute child:after:-bottom-10 child:after:text-2xl child:relative child:after:left-1/2 child:after:translate-x-[-50%] last:child:after:hidden">
+						<!-- Content Managed by JS -->
+					</ul>
+				</div>
+
 
 				<!-- Close Form (forces page-refresh) -->
 				<form action="" method="POST">
@@ -511,6 +542,23 @@ if ($deletePostList) {
 				}
 			});
 		});
+
+		// Adding Components
+		const compSelection = document.querySelector("#comp-selection");
+		const compTransmitter = document.querySelector("#comp-transmitter");
+		const pageStructure = document.querySelector("#page-structure");
+		let comps = [];
+
+		document.querySelector("#add-component").onclick = () => {
+			comps = [...comps, compSelection.value];
+			compTransmitter.value = comps;
+
+			let node = document.createElement("li");
+			node.innerText = compSelection.value;
+			pageStructure.appendChild(node);
+		}
+
+		// TODO Add changePath Script to PHP (changes img paths)
 
 	</script>
 </body>

@@ -1,5 +1,6 @@
 module.exports = {
   content: ["./src/*.{html,js,php}"],
+  important: true,
   theme: {
     extend: {
     "fontSize": {
