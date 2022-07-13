@@ -6,6 +6,7 @@ $password = $_POST["password"] ?? false;
 $forum = isset($_POST["forum-active"]) ?? false;
 $seiten = isset($_POST["seiten-active"]) ?? false;
 $page_creation_active = isset($_POST["page-creation-active"]) ?? false;
+$recompile = $_POST["recompile"] ?? null;
 $deletePostList = $_POST["delete-post-list"] ?? false;
 $_SESSION["loggedIn"] = ($_SESSION["loggedIn"] ?? false);
 $_SESSION["username"] = ($_SESSION["username"] ?? false);
@@ -73,7 +74,14 @@ $boilerplatePHP_end = "
 <script src=\"${javascript}\"></script>
 ";
 
-if (isset($filename) && isset($compList)) {
+// $recompile contains the basename of the page thats getting recompiled
+if (isset($filename) && isset($compList) || isset($recompile)) {
+	if (isset($recompile)) {
+		$info = json_decode(file_get_contents("${pagePath}/${recompile}/info.json"), true);
+		$compList = $info["components"];
+		$filename = $recompile;
+	}
+
 	foreach ($compList as $component) {
 		if (in_array($component, $components)) {
 			preg_match("/(?<=<!-- start -->)(.*)(?=<!-- end -->)/s", file_get_contents($compPath . "/" . $component . "/" . "${component}.html"), $match);
@@ -85,6 +93,7 @@ if (isset($filename) && isset($compList)) {
 	//Write to files
 	$generatedPage = fopen("${pagePath}/${filename}/${filename}.html", "w");
 	$generatedPage_php = fopen("${pagePath}/${filename}/${filename}.php", "w");
+	$infoJSON = fopen("${pagePath}/${filename}/info.json", "w");
 
 	fwrite($generatedPage, $boilerplateHTML_start);
 	foreach ($codeList as $code) {
@@ -96,6 +105,15 @@ if (isset($filename) && isset($compList)) {
 
 	fclose($generatedPage);
 	fclose($generatedPage_php);
+
+	$info = json_encode([
+		"date" => date("d.m.Y H:i:s"),
+		"user" => $_SESSION["username"],
+		"components" => $compList
+	]);
+
+	fwrite($infoJSON, $info);
+	fclose($infoJSON);
 
 	// Change Paths
 	$newContent = preg_replace('~((\.\.\/){3})+~', "./project/", file_get_contents("${pagePath}/${filename}/${filename}.php"));
@@ -345,15 +363,26 @@ if ($deletePostList) {
 				<div class="flex-grow">
 					<h2 class="w-fit mx-auto text-3xl mb-5">Seitenübersicht</h2>
 
-					<ul class="flex gap-2 child:grid child:gap-2 child:flex-grow flex-wrap">
+					<ul class="flex gap-5 child:grid child:gap-2 child:flex-grow flex-wrap">
 						<?php foreach ($pageList as $page) : ?>
 							<li>
 								<h3 class="title text-center text-2xl font-bold"><?=basename($page[0], ".html");?></h3>
 								<iframe src="<?=$page[0]?>" frameborder="0" class="mx-auto w-full"></iframe>
-								<form action="./" method="POST">
-									<input type="text" class="hidden" value="<?=$page[1]?>" name="navigate-page">
-									<button type="submit" class="text-center text-blue-500 hover:text-blue-300">Navigieren</button>
-								</form>
+								<div class="flex items-center justify-between">
+									<form action="./" method="POST">
+										<input type="text" class="hidden" value="<?=$page[1]?>" name="navigate-page">
+										<button type="submit" class="text-center text-blue-500 hover:text-blue-300">Navigieren</button>
+									</form>
+									<!-- Recompile-Button -->
+									<?php if ($devMode) : ?>
+									<form action="./" method="POST">
+										<input type="text" name="recompile" class="hidden" value="<?=basename($page[0], ".html")?>">
+										<button title="recompile page" type="submit">
+											<img src="./assets/icons/settings.png" alt="" class="w-5 h-5">
+										</button>
+									</form>
+									<?php endif; ?>
+								</div>
 							</li>
 						<?php endforeach; ?>
 					</ul>
