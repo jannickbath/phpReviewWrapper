@@ -47,6 +47,22 @@ $db_users->exec("CREATE TABLE IF NOT EXISTS users(
 	developer BOOLEAN NOT NULL DEFAULT ''
 )");
 
+// Time Tracking
+function convertSeconds($seconds) {
+    $dtF = new \DateTime('@0');
+    $dtT = new \DateTime("@$seconds");
+    $minutes = $dtF->diff($dtT)->format('%i') / 60;
+	return	$dtF->diff($dtT)->format('%h') + $minutes;
+}
+
+$_SESSION["time_start"] = ($_SESSION["time_start"] ?? time());
+if (isset($_POST["time_stop"])) {
+	$usedTime = time() - $_SESSION["time_start"];
+	$hoursUsed = convertSeconds($usedTime);
+	echo "<script>window.location.href = '${ticketUrl}/time_entries/new?time_entry[hours]=${hoursUsed}&time_entry[comments]=Testing%20Live%20Seite&time_entry[activity_id]=12'</script>";
+	$_SESSION["time_start"] = time();
+}
+
 // Fetch Users
 $entries = $db_users->query("SELECT * FROM users");
 $users = [];
@@ -331,9 +347,16 @@ if ($deletePostList) {
 
 			<?php if ($ticketUrl != "") : ?>
 				<!-- Ticket -->
-				<div class="flex">
+				<div class="flex flex-row-reverse group gap-2">
 					<a class="bg-red-200 p-2 rounded-md hover:bg-red-400 mx-auto" href="<?=$ticketUrl?>" rel="noopener noreferrer" target="_blank" class="">Ticket</a>
+
+					<!-- Zeit buchen -->
+					<form action="./" method="POST" class="w-fit h-fit hidden group-hover:block">
+						<input type="text" name="time_stop" class="hidden">
+						<button class="bg-red-200 p-2 rounded-md hover:bg-red-400 mx-auto">Zeit buchen</button>
+					</form>
 				</div>
+
 			<?php endif; ?>
 
 			<!-- Log out -->
@@ -377,6 +400,14 @@ if ($deletePostList) {
 				<input type="text" class="hidden" name="user-management">
 			</form>
 			<?php endif; ?>
+
+			<!-- Time Management -->
+			<!-- <form action="./" method="POST" class="bg-red-200 rounded-md hover:bg-red-400 z-10">
+				<button class="p-2 rounded-md forum-button" title="Time Management" type="submit">
+					<img src="./assets/icons/clock.png" class="h-5 w-5" alt="">
+				</button>
+				<input type="text" class="hidden" name="time_stop">
+			</form> -->
 		</div>
 
 		<!-- Message Box -->

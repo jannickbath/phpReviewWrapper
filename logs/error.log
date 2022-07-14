@@ -23,3 +23,21 @@
 2022/07/14 10:27:41 [error] 12#12: *638 FastCGI sent in stderr: "PHP message: PHP Notice:  Undefined index: demouser in /var/www/phpDemoWrapper/src/app.php on line 166PHP message: PHP Notice:  Trying to access array offset on value of type null in /var/www/phpDemoWrapper/src/app.php on line 166PHP message: PHP Notice:  Undefined index: demouser in /var/www/phpDemoWrapper/src/app.php on line 167PHP message: PHP Notice:  Trying to access array offset on value of type null in /var/www/phpDemoWrapper/src/app.php on line 167" while reading response header from upstream, client: 172.25.0.1, server: phpdemowrapper, request: "POST / HTTP/1.1", upstream: "fastcgi://127.0.0.1:9000", host: "phpdemowrapper", referrer: "http://phpdemowrapper/"
 2022/07/14 14:28:33 [error] 12#12: *1177 FastCGI sent in stderr: "PHP message: PHP Notice:  Undefined variable: designUrl in /var/www/phpDemoWrapper/src/app.php on line 323PHP message: PHP Notice:  Undefined variable: designUrl_mobile in /var/www/phpDemoWrapper/src/app.php on line 324PHP message: PHP Notice:  Undefined variable: ticketUrl in /var/www/phpDemoWrapper/src/app.php on line 328" while reading upstream, client: 172.25.0.1, server: phpdemowrapper, request: "POST / HTTP/1.1", upstream: "fastcgi://127.0.0.1:9000", host: "phpdemowrapper", referrer: "http://phpdemowrapper/"
 2022/07/14 14:28:34 [error] 12#12: *1176 FastCGI sent in stderr: "PHP message: PHP Notice:  Undefined variable: designUrl in /var/www/phpDemoWrapper/src/app.php on line 323PHP message: PHP Notice:  Undefined variable: designUrl_mobile in /var/www/phpDemoWrapper/src/app.php on line 324PHP message: PHP Notice:  Undefined variable: ticketUrl in /var/www/phpDemoWrapper/src/app.php on line 328" while reading upstream, client: 172.25.0.1, server: phpdemowrapper, request: "GET /favicon.ico HTTP/1.1", upstream: "fastcgi://127.0.0.1:9000", host: "phpdemowrapper", referrer: "http://phpdemowrapper/"
+2022/07/14 15:07:34 [error] 12#12: *1220 FastCGI sent in stderr: "PHP message: PHP Notice:  Undefined variable: usedTime in /var/www/phpDemoWrapper/src/app.php on line 61PHP message: PHP Fatal error:  Uncaught Exception: DateTime::__construct(): Failed to parse time string (@) at position 0 (@): Unexpected character in /var/www/phpDemoWrapper/src/app.php:58
+Stack trace:
+#0 /var/www/phpDemoWrapper/src/app.php(58): DateTime->__construct()
+#1 /var/www/phpDemoWrapper/src/app.php(61): secondsToTime()
+#2 {main}
+  thrown in /var/www/phpDemoWrapper/src/app.php on line 58" while reading response header from upstream, client: 172.25.0.1, server: phpdemowrapper, request: "GET /favicon.ico HTTP/1.1", upstream: "fastcgi://127.0.0.1:9000", host: "phpdemowrapper", referrer: "http://phpdemowrapper/"
+2022/07/14 15:07:50 [error] 12#12: *1223 FastCGI sent in stderr: "PHP message: PHP Notice:  Undefined variable: usedTime in /var/www/phpDemoWrapper/src/app.php on line 61PHP message: PHP Fatal error:  Uncaught Exception: DateTime::__construct(): Failed to parse time string (@) at position 0 (@): Unexpected character in /var/www/phpDemoWrapper/src/app.php:58
+Stack trace:
+#0 /var/www/phpDemoWrapper/src/app.php(58): DateTime->__construct()
+#1 /var/www/phpDemoWrapper/src/app.php(61): secondsToTime()
+#2 {main}
+  thrown in /var/www/phpDemoWrapper/src/app.php on line 58" while reading response header from upstream, client: 172.25.0.1, server: phpdemowrapper, request: "GET /favicon.ico HTTP/1.1", upstream: "fastcgi://127.0.0.1:9000", host: "phpdemowrapper", referrer: "http://phpdemowrapper/"
+2022/07/14 15:07:52 [error] 11#11: *1218 FastCGI sent in stderr: "PHP message: PHP Notice:  Undefined variable: usedTime in /var/www/phpDemoWrapper/src/app.php on line 61PHP message: PHP Fatal error:  Uncaught Exception: DateTime::__construct(): Failed to parse time string (@) at position 0 (@): Unexpected character in /var/www/phpDemoWrapper/src/app.php:58
+Stack trace:
+#0 /var/www/phpDemoWrapper/src/app.php(58): DateTime->__construct()
+#1 /var/www/phpDemoWrapper/src/app.php(61): secondsToTime()
+#2 {main}
+  thrown in /var/www/phpDemoWrapper/src/app.php on line 58" while reading response header from upstream, client: 172.25.0.1, server: phpdemowrapper, request: "GET /favicon.ico HTTP/1.1", upstream: "fastcgi://127.0.0.1:9000", host: "phpdemowrapper", referrer: "http://phpdemowrapper/"
