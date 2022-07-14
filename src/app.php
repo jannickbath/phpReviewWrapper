@@ -30,6 +30,13 @@ $addUser = $_POST["add-user"] ?? null;
 $addDeveloper = isset($_POST["add-developer"]) ?? false;
 $deleteUser = $_POST["delete-user"] ?? null;
 
+// Project Info
+$pInfoJSON = file_get_contents("./project_info.json");
+$pInfo = json_decode($pInfoJSON, true);
+$ticketUrl = $pInfo["ticket"];
+$designUrl = $pInfo["design"];
+$designUrl_mobile = $pInfo["design-mobile"];
+
 // Database (Users)
 $db_users = new SQLite3("./database/users.db");
 $db_users->exec("CREATE TABLE IF NOT EXISTS users(
@@ -308,10 +315,27 @@ if ($deletePostList) {
 					<img src="./assets/icons/submit.png" class="h-5 w-5" alt="">
 				</button>
 			</form>
+
 			<!-- Edit Button -->
-			<button class="bg-red-200 hover:bg-red-400 p-2 rounded-md edit-button group" title="Add a Description to a component">
+			<button class="bg-red-200 hover:bg-red-400 p-2 rounded-md edit-button h-fit" title="Add a Description to a component">
 				<img src="./assets/icons/edit.png" class="h-5 w-5" alt="">
 			</button>
+
+			<?php if ($designUrl != "") : ?>
+				<!-- Design -->
+				<div class="flex flex-row-reverse group gap-2">
+					<a class="bg-red-200 p-2 rounded-md hover:bg-red-400 mx-auto" href="<?=$designUrl?>" rel="noopener noreferrer" target="_blank">Design</a>
+					<a class="bg-red-200 p-2 rounded-md hover:bg-red-400 mx-auto group-hover:block hidden" href="<?=$designUrl_mobile?>" rel="noopener noreferrer" target="_blank" class="">Design - Mobile</a>
+				</div>
+			<?php endif; ?>
+
+			<?php if ($ticketUrl != "") : ?>
+				<!-- Ticket -->
+				<div class="flex">
+					<a class="bg-red-200 p-2 rounded-md hover:bg-red-400 mx-auto" href="<?=$ticketUrl?>" rel="noopener noreferrer" target="_blank" class="">Ticket</a>
+				</div>
+			<?php endif; ?>
+
 			<!-- Log out -->
 			<form action="./" method="POST" name="logoutForm" class="w-fit h-fit">
 				<input type="text" name="logout" class="hidden">
