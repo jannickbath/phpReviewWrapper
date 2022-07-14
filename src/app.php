@@ -15,13 +15,19 @@ $_SESSION["username"] = ($_SESSION["username"] ?? false);
 
 $_SESSION["newPage"] = ($_SESSION["newPage"] ?? null);
 
+// Login-Specific Variables 
 $wrongData = false;
 $disabled = false;
 $devMode = false;
 
+// Role Management
 $removeRole = $_POST["remove-role"] ?? null;
 $addRole = $_POST["add-role"] ?? null;
 $user_id = $_POST["user_id"] ?? null;
+
+// User Management
+$addUser = $_POST["add-user"] ?? null;
+$addDeveloper = isset($_POST["add-developer"]) ?? false;
 $deleteUser = $_POST["delete-user"] ?? null;
 
 // Database (Users)
@@ -54,6 +60,10 @@ if (isset($addRole) && isset($user_id)) {
 // User-Management
 if (isset($deleteUser)) {
 	$db_users->exec("DELETE FROM users WHERE id=$deleteUser");
+}
+
+if (isset($addUser)) {
+	$db_users->exec("INSERT INTO users (username, developer, password) VALUES ('$addUser', '$addDeveloper', 'demopass')");
 }
 
 // Fetch Pages
@@ -241,7 +251,8 @@ if ($deletePostList) {
 
 <head>
 	<meta charset="UTF-8">
-	<title>Test Website</title>
+	<title>Review - Raumaustatter</title>
+	<link rel="icon" type="image/png" href="./assets/images/phpReviewWrapper_icon.png" sizes="96x96">
 	<link rel="stylesheet" href="./styles/output.css">
 	<link rel="stylesheet" href="./project/dist/output.min.css">
 </head>
@@ -501,7 +512,7 @@ if ($deletePostList) {
 				<div class="flex-grow">
 					<h2 class="w-fit mx-auto text-3xl mb-5">User-Management</h2>
 
-					<ul class="child:flex child:gap-2 child:py-2 child:items-center child:relative">
+					<ul class="child:flex grid gap-3 child:gap-2 child:py-2 child:items-center child:relative">
 						<?php foreach ($users as $username => $detail) : ?>
 							<li>
 								<img src="./assets/icons/user.png" alt="" class="w-7 h-7">
@@ -514,30 +525,40 @@ if ($deletePostList) {
 										<p>Developer:</p>
 										<?php if ($detail["developer"]) : ?>
 											<input type="text" name="remove-role" value="developer" class="hidden">
-											<button type="submit" class="bg-red-500 px-4 py-1 rounded-md" title="Remove developer role">Disable</button>
+											<?php if ($username != $_SESSION["username"]) : ?>
+												<button type="submit" class="bg-red-500 px-4 py-1 rounded-md" title="Remove developer role">Remove</button>
+											<?php else : ?>
+												<button type="submit" class="bg-red-500 px-4 py-1 rounded-md disabled" title="Remove developer role">Remove</button>
+											<?php endif; ?>
 										<?php else : ?>
 											<input type="text" name="add-role" value="developer" class="hidden">
-											<button type="submit" class="bg-green-500 px-4 py-1 rounded-md" title="Add developer role">Enable</button>
-										<?php endif; ?>
-									</div>
-								</form>
-								<form action="./" method="POST">
-									<input type="text" class="hidden" name="user_id" value="<?=$detail['id']?>">
-
-									<!-- Disabled -->
-									<div class="flex items-center gap-2">
-										<p>Disabled:</p>
-										<?php if ($detail["disabled"]) : ?>
-											<input type="text" name="remove-role" value="disabled" class="hidden">
-											<button type="submit" class="bg-red-500 px-4 py-1 rounded-md" title="Remove disabled role">Disable</button>
-										<?php else : ?>
-											<input type="text" name="add-role" value="disabled" class="hidden">
-											<button type="submit" class="bg-green-500 px-4 py-1 rounded-md" title="Add disabled role">Enable</button>
+											<button type="submit" class="bg-green-500 px-4 py-1 rounded-md" title="Add developer role">Add</button>
 										<?php endif; ?>
 									</div>
 								</form>
 
-								<div class="button-section absolute right-0">
+								<?php if ($username != $_SESSION["username"]) : ?>
+								<div class="button-section absolute right-0 flex gap-2">
+									<form action="./" method="POST">
+										<input type="text" class="hidden" name="user_id" value="<?=$detail['id']?>">
+
+										<!-- Disabled -->
+										<div class="flex items-center gap-2">
+											<?php if ($detail["disabled"]) : ?>
+												<input type="text" name="remove-role" value="disabled" class="hidden">
+												<button type="submit" title="Unlock User">
+													<img src="./assets/icons/locked.png" alt="" class="w-7 h-7">
+												</button>
+											<?php else : ?>
+												<input type="text" name="add-role" value="disabled" class="hidden">
+												<button type="submit" title="Lock User">
+													<img src="./assets/icons/unlocked.png" alt="" class="w-7 h-7">
+												</button>
+											<?php endif; ?>
+										</div>
+									</form>
+
+									<!-- Delete-User-Button -->
 									<form action="./" method="POST">
 										<input type="text" class="hidden" name="delete-user" value="<?=$detail['id']?>">
 										<button type="submit" title="Delete User">
@@ -545,10 +566,32 @@ if ($deletePostList) {
 										</button>
 									</form>
 								</div>
+								<?php else : ?>
+								<div class="user-info absolute right-0 bg-blue-300 h-full p-2 grid place-items-center font-bold rounded-lg">
+									You
+								</div>
+								<?php endif; ?>
 
 							</li>
 						<?php endforeach; ?>
 					</ul>
+
+					<!-- Adding Users -->
+					<div class="user-adding-wrapper absolute bottom-2 left-2">
+						<form action="./" method="POST" class="flex gap-3">
+							<input type="text" placeholder="Username" name="add-user" class="border-2 rounded-sm">
+							<div class="flex items-center gap-2">
+								<p>Roles: </p>
+								<ul>
+									<li>
+										<input type="checkbox" name="add-developer">
+										<label for="add-developer">Developer</label>
+									</li>
+								</ul>
+							</div>
+							<button type="submit" class="bg-green-400 rounded-md px-2 py-1">Add</button>
+						</form>
+					</div>
 				</div>
 
 				<!-- Close Form (forces page-refresh) -->

@@ -55,3 +55,8 @@ body, html {
 .blue-indicator, .red-indicator {
   position: relative !important;
 }
+
+.disabled {
+  pointer-events: none !important;
+  opacity: 0.65 !important;
+}
