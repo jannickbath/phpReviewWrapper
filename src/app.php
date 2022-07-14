@@ -5,6 +5,7 @@ $username = $_POST["username"] ?? false;
 $password = $_POST["password"] ?? false;
 $forum = isset($_POST["forum-active"]) ?? false;
 $seiten = isset($_POST["seiten-active"]) ?? false;
+$userManagement= isset($_POST["user-management"]) ?? false;
 $page_creation_active = isset($_POST["page-creation-active"]) ?? false;
 $recompile = $_POST["recompile"] ?? null;
 $deletePage = $_POST["delete-page"] ?? null;
@@ -18,10 +19,42 @@ $wrongData = false;
 $disabled = false;
 $devMode = false;
 
-//User Array 
-$users = [
-	'demouser' => ['password' => 'demopass', 'id' => 0, 'disabled' => false, 'developer' => true]
-];
+$removeRole = $_POST["remove-role"] ?? null;
+$addRole = $_POST["add-role"] ?? null;
+$user_id = $_POST["user_id"] ?? null;
+$deleteUser = $_POST["delete-user"] ?? null;
+
+// Database (Users)
+$db_users = new SQLite3("./database/users.db");
+$db_users->exec("CREATE TABLE IF NOT EXISTS users(
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	username TEXT NOT NULL DEFAULT '',
+	password TEXT NOT NULL DEFAULT '',
+	disabled BOOLEAN NOT NULL DEFAULT '',
+	developer BOOLEAN NOT NULL DEFAULT ''
+)");
+
+// Fetch Users
+$entries = $db_users->query("SELECT * FROM users");
+$users = [];
+
+while ($row = $entries->fetchArray()) {
+	$users[$row["username"]] = ["password" => $row["password"], "disabled" => $row["disabled"], "developer" => $row["developer"], "id" => $row["id"]];
+}
+
+// Role-Management
+if (isset($removeRole) && isset($user_id)) {
+	$db_users->exec("UPDATE users SET $removeRole=0 WHERE id=$user_id");
+}
+
+if (isset($addRole) && isset($user_id)) {
+	$db_users->exec("UPDATE users SET $addRole=1 WHERE id=$user_id");
+}
+
+// User-Management
+if (isset($deleteUser)) {
+	$db_users->exec("DELETE FROM users WHERE id=$deleteUser");
+}
 
 // Fetch Pages
 $basePath = "./project/src/pages";
@@ -160,7 +193,7 @@ if (isset($_POST["logout"])) {
 	$_SESSION["loggedIn"] = false;
 }
 
-//Database
+//Database (Messages)
 $db = new SQLite3("./database/messages.db");
 $db->exec("CREATE TABLE IF NOT EXISTS messages(
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -170,7 +203,8 @@ $db->exec("CREATE TABLE IF NOT EXISTS messages(
 	page TEXT NOT NULL DEFAULT ''
 )");
 
-// Save message-content to database
+
+// Save message-content to database (messages)
 if (isset($_POST["message-content"])) {
 	$arr = json_decode($_POST["message-content"]);
 	$newPage = $_SESSION["newPage"];
@@ -179,7 +213,7 @@ if (isset($_POST["message-content"])) {
 	}
 }
 
-// Fetch Entries
+// Fetch Entries (messages)
 function getEntries()
 {
 	$currentPage = $_SESSION["newPage"];
@@ -291,13 +325,21 @@ if ($deletePostList) {
 				<input type="text" class="hidden" name="forum-active">
 			</form>
 
-			<!-- Developer Settings -->
 			<?php if ($devMode) : ?> 
+			<!-- Developer Settings -->
 			<form action="./" method="POST" class="bg-red-200 rounded-md hover:bg-red-400 z-10">
 				<button class="p-2 rounded-md forum-button" title="Developer Settings" type="submit">
 					<img src="./assets/icons/settings.png" class="h-5 w-5" alt="">
 				</button>
 				<input type="text" class="hidden" name="page-creation-active">
+			</form>
+
+			<!-- User Management -->
+			<form action="./" method="POST" class="bg-red-200 rounded-md hover:bg-red-400 z-10">
+				<button class="p-2 rounded-md forum-button" title="User Management" type="submit">
+					<img src="./assets/icons/user.png" class="h-5 w-5" alt="">
+				</button>
+				<input type="text" class="hidden" name="user-management">
 			</form>
 			<?php endif; ?>
 		</div>
@@ -444,6 +486,70 @@ if ($deletePostList) {
 					</ul>
 				</div>
 
+
+				<!-- Close Form (forces page-refresh) -->
+				<form action="" method="POST">
+					<button id="close-forum" class="absolute right-3 top-3 w-fit" type="submit">
+						<img src="./assets/icons/cross.png" alt="" class="w-5 h-5">
+					</button>
+				</form>
+			</div>
+		<?php endif; ?>
+
+		<?php if ($userManagement): ?>
+			<div class="forum fixed left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] bg-white z-[200] w-8/12 h-[600px] rounded-sm p-4 flex flex-col justify-between">
+				<div class="flex-grow">
+					<h2 class="w-fit mx-auto text-3xl mb-5">User-Management</h2>
+
+					<ul class="child:flex child:gap-2 child:py-2 child:items-center child:relative">
+						<?php foreach ($users as $username => $detail) : ?>
+							<li>
+								<img src="./assets/icons/user.png" alt="" class="w-7 h-7">
+								<h4><?=$username?> --> </h4>
+								<form action="./" method="POST" class="flex gap-5">
+									<input type="text" class="hidden" name="user_id" value="<?=$detail['id']?>">
+
+									<!-- Developer -->
+									<div class="flex items-center gap-2">
+										<p>Developer:</p>
+										<?php if ($detail["developer"]) : ?>
+											<input type="text" name="remove-role" value="developer" class="hidden">
+											<button type="submit" class="bg-red-500 px-4 py-1 rounded-md" title="Remove developer role">Disable</button>
+										<?php else : ?>
+											<input type="text" name="add-role" value="developer" class="hidden">
+											<button type="submit" class="bg-green-500 px-4 py-1 rounded-md" title="Add developer role">Enable</button>
+										<?php endif; ?>
+									</div>
+								</form>
+								<form action="./" method="POST">
+									<input type="text" class="hidden" name="user_id" value="<?=$detail['id']?>">
+
+									<!-- Disabled -->
+									<div class="flex items-center gap-2">
+										<p>Disabled:</p>
+										<?php if ($detail["disabled"]) : ?>
+											<input type="text" name="remove-role" value="disabled" class="hidden">
+											<button type="submit" class="bg-red-500 px-4 py-1 rounded-md" title="Remove disabled role">Disable</button>
+										<?php else : ?>
+											<input type="text" name="add-role" value="disabled" class="hidden">
+											<button type="submit" class="bg-green-500 px-4 py-1 rounded-md" title="Add disabled role">Enable</button>
+										<?php endif; ?>
+									</div>
+								</form>
+
+								<div class="button-section absolute right-0">
+									<form action="./" method="POST">
+										<input type="text" class="hidden" name="delete-user" value="<?=$detail['id']?>">
+										<button type="submit" title="Delete User">
+											<img src="./assets/icons/delete.png" alt="" class="w-7 h-7">
+										</button>
+									</form>
+								</div>
+
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				</div>
 
 				<!-- Close Form (forces page-refresh) -->
 				<form action="" method="POST">
