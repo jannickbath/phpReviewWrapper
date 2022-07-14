@@ -7,6 +7,7 @@ $forum = isset($_POST["forum-active"]) ?? false;
 $seiten = isset($_POST["seiten-active"]) ?? false;
 $page_creation_active = isset($_POST["page-creation-active"]) ?? false;
 $recompile = $_POST["recompile"] ?? null;
+$deletePage = $_POST["delete-page"] ?? null;
 $deletePostList = $_POST["delete-post-list"] ?? false;
 $_SESSION["loggedIn"] = ($_SESSION["loggedIn"] ?? false);
 $_SESSION["username"] = ($_SESSION["username"] ?? false);
@@ -22,6 +23,7 @@ $users = [
 	'demouser' => ['password' => 'demopass', 'id' => 0, 'disabled' => false, 'developer' => true]
 ];
 
+// Fetch Pages
 $basePath = "./project/src/pages";
 $pages = array_diff(scandir($basePath), array(".", ".."));
 $pageList = [];
@@ -122,6 +124,9 @@ if (isset($filename) && isset($compList) || isset($recompile)) {
 	fclose($phpFile);
 }
 
+if (isset($deletePage) && isset($pagePath)) {
+	system("rm -rf ".escapeshellarg("${pagePath}/${deletePage}"));
+}
 
 //Login
 if (($username && $password)) {
@@ -373,14 +378,24 @@ if ($deletePostList) {
 										<input type="text" class="hidden" value="<?=$page[1]?>" name="navigate-page">
 										<button type="submit" class="text-center text-blue-500 hover:text-blue-300">Navigieren</button>
 									</form>
-									<!-- Recompile-Button -->
 									<?php if ($devMode) : ?>
-									<form action="./" method="POST">
-										<input type="text" name="recompile" class="hidden" value="<?=basename($page[0], ".html")?>">
-										<button title="recompile page" type="submit">
-											<img src="./assets/icons/settings.png" alt="" class="w-5 h-5">
-										</button>
-									</form>
+									<div class="flex gap-3">
+										<!-- Recompile-Button -->
+										<form action="./" method="POST">
+											<input type="text" name="recompile" class="hidden" value="<?=basename($page[0], ".html")?>">
+											<input type="text" name="seiten-active" class="hidden">
+											<button title="recompile page" type="submit">
+												<img src="./assets/icons/reload.png" alt="" class="w-5 h-5">
+											</button>
+										</form>
+										<!-- Delete-Button -->
+										<form action="./" method="POST">
+											<input type="text" name="delete-page" class="hidden" value="<?=basename($page[0], ".html")?>">
+											<button title="delete page" type="submit">
+												<img src="./assets/icons/delete.png" alt="" class="w-5 h-5">
+											</button>
+										</form>
+									</div>	
 									<?php endif; ?>
 								</div>
 							</li>
