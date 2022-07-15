@@ -59,7 +59,11 @@ $_SESSION["time_start"] = ($_SESSION["time_start"] ?? time());
 if (isset($_POST["time_stop"])) {
 	$usedTime = time() - $_SESSION["time_start"];
 	$hoursUsed = convertSeconds($usedTime);
+
+	//Weiterleitung
 	echo "<script>window.location.href = '${ticketUrl}/time_entries/new?time_entry[hours]=${hoursUsed}&time_entry[comments]=Testing%20Live%20Seite&time_entry[activity_id]=12'</script>";
+
+	//Reset Timer
 	$_SESSION["time_start"] = time();
 }
 
@@ -478,19 +482,27 @@ if ($deletePostList) {
 
 					<ul class="flex gap-5 child:grid child:gap-2 child:flex-grow flex-wrap">
 						<?php foreach ($pageList as $page) : ?>
+							<?php 
+							$phpFile = array_values(array_filter($page, function($value) {
+								return pathinfo($value, PATHINFO_EXTENSION) == "php";
+							}))[0];
+							$htmlFile = array_values(array_filter($page, function($value) {
+								return pathinfo($value, PATHINFO_EXTENSION) == "html";
+							}))[0];
+							?>
 							<li>
-								<h3 class="title text-center text-2xl font-bold"><?=basename($page[0], ".html");?></h3>
-								<iframe src="<?=$page[0]?>" frameborder="0" class="mx-auto w-full"></iframe>
+								<h3 class="title text-center text-2xl font-bold"><?=basename($htmlFile, ".html");?></h3>
+								<iframe src="<?=$htmlFile?>" frameborder="0" class="mx-auto w-full"></iframe>
 								<div class="flex items-center justify-between">
 									<form action="./" method="POST">
-										<input type="text" class="hidden" value="<?=$page[1]?>" name="navigate-page">
+										<input type="text" class="hidden" value="<?=$phpFile?>" name="navigate-page">
 										<button type="submit" class="text-center text-blue-500 hover:text-blue-300">Navigieren</button>
 									</form>
 									<?php if ($devMode) : ?>
 									<div class="flex gap-3">
 										<!-- Recompile-Button -->
 										<form action="./" method="POST">
-											<input type="text" name="recompile" class="hidden" value="<?=basename($page[0], ".html")?>">
+											<input type="text" name="recompile" class="hidden" value="<?=basename($htmlFile, ".html")?>">
 											<input type="text" name="seiten-active" class="hidden">
 											<button title="recompile page" type="submit">
 												<img src="./assets/icons/reload.png" alt="" class="w-5 h-5">
@@ -498,7 +510,7 @@ if ($deletePostList) {
 										</form>
 										<!-- Delete-Button -->
 										<form action="./" method="POST">
-											<input type="text" name="delete-page" class="hidden" value="<?=basename($page[0], ".html")?>">
+											<input type="text" name="delete-page" class="hidden" value="<?=basename($htmlFile, ".html")?>">
 											<button title="delete page" type="submit">
 												<img src="./assets/icons/delete.png" alt="" class="w-5 h-5">
 											</button>
@@ -546,8 +558,8 @@ if ($deletePostList) {
 					</form>
 				</div>
 
-				<div class="mx-auto flex-grow p-5 grid">
-					<ul id="page-structure" class="child:p-2 child:bg-violet-400 child:rounded-md flex flex-col gap-12 child:h-fit child:after:content-['↓'] child:after:absolute child:after:-bottom-10 child:after:text-2xl child:relative child:after:left-1/2 child:after:translate-x-[-50%] last:child:after:hidden">
+				<div class="mx-auto p-5 flex flex-wrap">
+					<ul id="page-structure" class="child:p-2 child:bg-violet-400 child:rounded-md flex gap-12 child:h-fit child:after:content-['→'] child:after:absolute child:after:-right-10 child:after:top-1/2 child:after:-translate-y-[50%] child:after:text-2xl child:relative last:child:after:hidden child:text-center flex-wrap">
 						<!-- Content Managed by JS -->
 					</ul>
 				</div>
