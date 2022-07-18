@@ -702,7 +702,7 @@ if ($deletePostList) {
 			}
 
 			//toggle icon src
-			event.target.src = icons[+editActive];
+			document.querySelector(".edit-button img").src = icons[+editActive];
 
 			//make every ce_element clickable
 			divs.forEach((element) => {
