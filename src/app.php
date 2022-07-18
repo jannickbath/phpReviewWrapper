@@ -15,6 +15,8 @@ $_SESSION["username"] = ($_SESSION["username"] ?? false);
 
 $_SESSION["newPage"] = ($_SESSION["newPage"] ?? null);
 
+$fullscreen = isset($_POST["fullscreen-mode"]) ?? false;
+
 // Login-Specific Variables 
 $wrongData = false;
 $disabled = false;
@@ -285,7 +287,7 @@ if ($deletePostList) {
 </head>
 
 <body <?php if (!$_SESSION["loggedIn"]) {
-			echo 'class="bg-sunset overflow-hidden"';
+			echo "class='bg-3 overflow-hidden bg-no-repeat bg-cover'";
 		} ?>>
 	<?php if ($_SESSION["loggedIn"]) : ?>
 		<?php if (isset($_SESSION["newPage"])) : ?>
@@ -300,8 +302,8 @@ if ($deletePostList) {
 			<div class="">
 				<h1 class="text-red-500 text-3xl text-center mb-5">Login</h1>
 				<form action="./" method="POST" name="loginForm" class="grid gap-y-2">
-					<input type="text" name="username" class="border border-black h-8 rounded-md">
-					<input type="password" name="password" id="" class="border border-black h-8 rounded-md">
+					<input type="text" name="username" class="">
+					<input type="password" name="password" id="" class="">
 					<button onclick="submit('loginForm')" class="p-1 rounded-md bg-slate-300 hover:bg-slate-400 w-fit px-3 ml-auto">Submit</button>
 				</form>
 				<?php if ($wrongData) : ?>
@@ -326,7 +328,7 @@ if ($deletePostList) {
 		</div>
 	<?php endif; ?>
 
-	<?php if ($_SESSION["loggedIn"]) : ?>
+	<?php if ($_SESSION["loggedIn"] && !$fullscreen) : ?>
 		<div class="wrapper flex fixed right-10 bottom-5 gap-2 items-center z-[99999]">
 			<!-- Submit Button -->
 			<form action="./" method="POST" id="submitForm" name="submitForm" class="w-fit h-full bg-green-400 rounded-md">
@@ -669,162 +671,183 @@ if ($deletePostList) {
 				</form>
 			</div>
 		<?php endif; ?>
-
 	<?php endif; ?>
+
+	<!-- Fullscreen Form -->
+	<div class="hidden">
+		<form action="./" method="POST" name="fullscreen-form">
+			<input type="text" name="fullscreen-mode">
+		</form>
+	</div>
+
+	<!-- Exit Fullscreen Form -->
+	<div class="hidden">
+		<form action="./" method="POST" name="fullscreen-form-exit">
+			<input type="text">
+		</form>
+	</div>
 
 	<script>
 		function submit(formName) {
 			document.forms[formName].submit();
 		}
 
-		document.querySelectorAll(".close-button").forEach((element) => {
-			element.onclick = (event) => {
-				event.target.parentElement.style.opacity = 0;
+		<?php if (!$fullscreen) : ?>
+			document.querySelectorAll(".close-button").forEach((element) => {
+				element.onclick = (event) => {
+					event.target.parentElement.style.opacity = 0;
+				}
+			});
+
+			var editActive = false;
+			var toggled = false;
+			var activeElement = "";
+			var itemList = {};
+			var deleteQueue = [];
+			const icons = ["./assets/icons/edit.png", "./assets/icons/cross.png"];
+			const divs = document.querySelectorAll("div");
+
+			document.querySelector(".edit-button").onclick = (event) => {
+				editActive = !editActive;
+
+				//toggle visibility of submit-button
+				if (editActive) {
+					document.querySelector(".submit-button").style.setProperty("display", "block", "important");
+				} else {
+					document.querySelector(".submit-button").style.setProperty("display", "none", "important");
+				}
+
+				//toggle icon src
+				document.querySelector(".edit-button img").src = icons[+editActive];
+
+				//make every ce_element clickable
+				divs.forEach((element) => {
+					element.classList.forEach((classname) => {
+						if (classname.startsWith("ce_")) {
+							element.onclick = () => {
+								if (editActive) {
+									toggled = !toggled;
+									if (toggled) {
+										element.classList.add("red-indicator");
+										if (!(classname in itemList)) {
+											itemList = {
+												...itemList,
+												[classname]: []
+											}
+										}
+										document.querySelector(".message-wrapper").style.setProperty("display", "flex", "important");
+										document.querySelector(".message-wrapper textarea").focus();
+										document.querySelector(".message-wrapper textarea").select();
+										activeElement = classname;
+									} else {
+										element.classList.remove("red-indicator");
+										element.classList.remove("blue-indicator");
+										if (classname in itemList) {
+											delete itemList[classname];
+										}
+										document.querySelector(".message-wrapper").style.setProperty("display", "none", "important");
+									}
+									document.querySelector("#submitForm input").value = JSON.stringify(itemList);
+								}
+							}
+
+							// Shows edited elements
+							if (classname in itemList && element.nextElementSibling.className.split(" ")[0] != "written-message") {
+								element.classList.add("blue-indicator");
+								element.classList.remove("red-indicator");
+
+								var writtenMessage = document.querySelector(".written-message").cloneNode(true);
+								writtenMessage.style.setProperty("display", "block", "important");
+								writtenMessage.querySelector("p").innerText = itemList[classname][0];
+								writtenMessage.querySelector("h5").innerText = `${itemList[classname][1]}'s Message:`;
+								element.parentNode.insertBefore(writtenMessage, element.nextSibling);
+							}
+
+							// Converts cursor to cell-cursor
+							if (editActive) {
+								element.style.setProperty("cursor", "cell");
+							}
+
+							// border-indicator on hover
+							element.onmouseenter = () => {
+								if (editActive) {
+									element.style.setProperty("border", "3px solid yellow", "important");
+								}
+							}
+							element.onmouseleave = () => {
+								if (editActive) {
+									element.style.removeProperty("border");
+								}
+							}
+
+						}
+					});
+				});
 			}
-		});
+			// Submit Message
+			document.getElementById("submit-message").onclick = (e) => {
+				const messageBoxVal = document.getElementById("message-bug").value;
+				const messageWrapper = document.querySelector(".message-wrapper");
 
-		var editActive = false;
-		var toggled = false;
-		var activeElement = "";
-		var itemList = {};
-		var deleteQueue = [];
-		const icons = ["./assets/icons/edit.png", "./assets/icons/cross.png"];
-		const divs = document.querySelectorAll("div");
+				itemList[activeElement] = [messageBoxVal, '<?= $_SESSION["username"]; ?>'];
+				messageWrapper.style.removeProperty("display", "none", "important");
 
-		document.querySelector(".edit-button").onclick = (event) => {
-			editActive = !editActive;
-
-			//toggle visibility of submit-button
-			if (editActive) {
-				document.querySelector(".submit-button").style.setProperty("display", "block", "important");
-			} else {
-				document.querySelector(".submit-button").style.setProperty("display", "none", "important");
+				document.querySelector("#submitForm input").value = JSON.stringify(itemList);
 			}
 
-			//toggle icon src
-			document.querySelector(".edit-button img").src = icons[+editActive];
+			//Adds selected posts to delete queue
+			document.querySelectorAll(".delete-post").forEach(button => {
+				button.onclick = (e) => {
+					const id = e.target.parentElement.querySelector("span.hidden").innerText;
+					if (!deleteQueue.includes(id)) {
+						deleteQueue.push(id);
+					}
+					e.target.parentElement.style.setProperty("background-color", "red", "important");
 
-			//make every ce_element clickable
+					if (deleteQueue.length > 0) {
+						document.getElementById("confirm-delete").style.setProperty("display", "block", "important");
+					}
+					document.getElementById("delete-post-list").value = deleteQueue;
+				}
+			});
+
+			// Add Id's for each content element (for navigation) -> see forum
 			divs.forEach((element) => {
 				element.classList.forEach((classname) => {
 					if (classname.startsWith("ce_")) {
-						element.onclick = () => {
-							if (editActive) {
-								toggled = !toggled;
-								if (toggled) {
-									// element.style.setProperty("background-color", "red", "important");
-									element.classList.add("red-indicator");
-									if (!(classname in itemList)) {
-										itemList = {
-											...itemList,
-											[classname]: []
-										}
-									}
-									document.querySelector(".message-wrapper").style.setProperty("display", "flex", "important");
-									document.querySelector(".message-wrapper textarea").focus();
-									document.querySelector(".message-wrapper textarea").select();
-									activeElement = classname;
-								} else {
-									// element.style.removeProperty("background-color");
-									element.classList.remove("red-indicator");
-									element.classList.remove("blue-indicator");
-									if (classname in itemList) {
-										delete itemList[classname];
-									}
-									document.querySelector(".message-wrapper").style.setProperty("display", "none", "important");
-								}
-								document.querySelector("#submitForm input").value = JSON.stringify(itemList);
-								console.log(itemList);
-							}
+						if (!document.getElementById(classname) ?? false) {
+							element.setAttribute("id", classname);
 						}
-
-						// Shows edited elements
-						if (classname in itemList && element.nextElementSibling.className.split(" ")[0] != "written-message") {
-							// element.style.setProperty("background-color", "skyblue", "important");
-							element.classList.add("blue-indicator");
-							element.classList.remove("red-indicator");
-							var writtenMessage = document.querySelector(".written-message").cloneNode(true);
-							writtenMessage.style.setProperty("display", "block", "important");
-
-							writtenMessage.querySelector("p").innerText = itemList[classname][0];
-							writtenMessage.querySelector("h5").innerText = `${itemList[classname][1]}'s Message:`;
-							element.parentNode.insertBefore(writtenMessage, element.nextSibling);
-						}
-
-						// Converts cursor to cell-cursor
-						if (editActive) {
-							element.style.setProperty("cursor", "cell");
-						}
-
-						// border-indicator on hover
-						element.onmouseenter = () => {
-							if (editActive) {
-								element.style.setProperty("border", "3px solid yellow", "important");
-							}
-						}
-						element.onmouseleave = () => {
-							if (editActive) {
-								element.style.removeProperty("border");
-							}
-						}
-
 					}
 				});
 			});
-		}
-		// Submit Message
-		document.getElementById("submit-message").onclick = (e) => {
-			const messageBoxVal = document.getElementById("message-bug").value;
-			const messageWrapper = document.querySelector(".message-wrapper");
+		<?php endif ;?>
 
-			itemList[activeElement] = [messageBoxVal, '<?= $_SESSION["username"]; ?>'];
-			messageWrapper.style.removeProperty("display", "none", "important");
 
-			document.querySelector("#submitForm input").value = JSON.stringify(itemList);
-			console.log(itemList);
-		}
+		<?php if ($page_creation_active) : ?>
+			// Adding Components
+			const compSelection = document.querySelector("#comp-selection");
+			const compTransmitter = document.querySelector("#comp-transmitter");
+			const pageStructure = document.querySelector("#page-structure");
+			let comps = [];
 
-		//Adds selected posts to delete queue
-		document.querySelectorAll(".delete-post").forEach(button => {
-			button.onclick = (e) => {
-				const id = e.target.parentElement.querySelector("span.hidden").innerText;
-				if (!deleteQueue.includes(id)) {
-					deleteQueue.push(id);
-				}
-				e.target.parentElement.style.setProperty("background-color", "red", "important");
+			document.querySelector("#add-component").onclick = () => {
+				comps = [...comps, compSelection.value];
+				compTransmitter.value = comps;
 
-				if (deleteQueue.length > 0) {
-					document.getElementById("confirm-delete").style.setProperty("display", "block", "important");
-				}
-				// console.log(deleteQueue);
-				document.getElementById("delete-post-list").value = deleteQueue;
+				let node = document.createElement("li");
+				node.innerText = compSelection.value;
+				pageStructure.appendChild(node);
 			}
-		});
+		<?php endif; ?>
 
-		// Add Id's for each content element (for navigation) -> see forum
-		divs.forEach((element) => {
-			element.classList.forEach((classname) => {
-				if (classname.startsWith("ce_")) {
-					if (!document.getElementById(classname) ?? false) {
-						element.setAttribute("id", classname);
-					}
-				}
-			});
-		});
-
-		// Adding Components
-		const compSelection = document.querySelector("#comp-selection");
-		const compTransmitter = document.querySelector("#comp-transmitter");
-		const pageStructure = document.querySelector("#page-structure");
-		let comps = [];
-
-		document.querySelector("#add-component").onclick = () => {
-			comps = [...comps, compSelection.value];
-			compTransmitter.value = comps;
-
-			let node = document.createElement("li");
-			node.innerText = compSelection.value;
-			pageStructure.appendChild(node);
+		// Control Fullscreen mode
+		window.onresize = () => {
+			if (window.innerHeight == screen.height) {
+				submit("fullscreen-form");
+			}else {
+				submit("fullscreen-form-exit");
+			}
 		}
 
 	</script>
