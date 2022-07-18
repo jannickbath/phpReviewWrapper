@@ -302,8 +302,8 @@ if ($deletePostList) {
 			<div class="">
 				<h1 class="text-red-500 text-3xl text-center mb-5">Login</h1>
 				<form action="./" method="POST" name="loginForm" class="grid gap-y-2">
-					<input type="text" name="username" class="">
-					<input type="password" name="password" id="" class="">
+					<input type="text" name="username" class="form-input">
+					<input type="password" name="password" id="" class="form-input">
 					<button onclick="submit('loginForm')" class="p-1 rounded-md bg-slate-300 hover:bg-slate-400 w-fit px-3 ml-auto">Submit</button>
 				</form>
 				<?php if ($wrongData) : ?>
@@ -420,7 +420,7 @@ if ($deletePostList) {
 		<div class="message-wrapper fixed bg-slate-500 top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%] w-[500px] h-[250px] rounded-md justify-center hidden text-lg z-[150]">
 			<div class="w-10/12 h-1/2 text-center mt-4">
 				<h3 class="mb-2 text-2xl">Was ist ihnen aufgefallen?</h3>
-				<textarea id="message-bug" class="w-full h-full rounded-sm"></textarea>
+				<textarea id="message-bug" class="w-full h-full rounded-sm form-textarea"></textarea>
 				<div class="flex-grow flex justify-end">
 					<button id="submit-message" class="px-2 py-1 bg-blue-300 rounded-md">Submit</button>
 				</div>
@@ -542,7 +542,7 @@ if ($deletePostList) {
 					<form action="./" method="POST">
 						<div class="select">
 							<label for="comp-selection">Choose a Component</label>
-							<select name="comp-selection" id="comp-selection">
+							<select name="comp-selection" id="comp-selection" class="form-select">
 								<?php foreach($components as $component) : ?>
 									<option value="<?=$component?>"><?=$component?></option>
 								<?php endforeach; ?>
@@ -553,7 +553,7 @@ if ($deletePostList) {
 
 						<!-- Submit Button -->
 						<div class="absolute bottom-5 right-5 flex gap-2">
-							<input type="text" class="border-2 rounded-sm" placeholder="Pagename" name="pagename" required>
+							<input type="text" class="border-2 rounded-sm form-input" placeholder="Pagename" name="pagename" required>
 							<button type="submit" class="bg-lime-500 px-4 py-1 rounded-md border-2 border-lime-500 hover:bg-transparent transition-colors">Generate</button>
 							<input type="text" class="hidden" id="comp-transmitter" name="comps">
 						</div>
@@ -648,12 +648,12 @@ if ($deletePostList) {
 					<!-- Adding Users -->
 					<div class="user-adding-wrapper absolute bottom-2 left-2">
 						<form action="./" method="POST" class="flex gap-3">
-							<input type="text" placeholder="Username" name="add-user" class="border-2 rounded-sm">
+							<input type="text" placeholder="Username" name="add-user" class="border-2 rounded-sm form-input">
 							<div class="flex items-center gap-2">
 								<p>Roles: </p>
 								<ul>
 									<li>
-										<input type="checkbox" name="add-developer">
+										<input type="checkbox" name="add-developer" class="form-checkbox">
 										<label for="add-developer">Developer</label>
 									</li>
 								</ul>
