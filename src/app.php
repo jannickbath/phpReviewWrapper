@@ -32,12 +32,22 @@ $addUser = $_POST["add-user"] ?? null;
 $addDeveloper = isset($_POST["add-developer"]) ?? false;
 $deleteUser = $_POST["delete-user"] ?? null;
 
+// Component Management
+$hideComp = $_POST["hide-comp"] ?? null;
+$showComp = $_POST["show-comp"] ?? null;
+
 // Project Info
-$pInfoJSON = file_get_contents("./project_info.json");
+$pInfoJSON = file_get_contents("./project_config.json");
 $pInfo = json_decode($pInfoJSON, true);
 $ticketUrl = $pInfo["ticket"];
 $designUrl = $pInfo["design"];
 $designUrl_mobile = $pInfo["design-mobile"];
+$utilButtons = $pInfo["util-buttons"] ?? 1;
+$fullscreenMode = $pInfo["fullscreen-mode"] ?? 0;
+$fillForms = $pInfo["fill-forms"] ?? 1;
+
+$hiddenCompPrevDefault = $pInfo["hidden-comp-preview"]["default"] ?? 0;
+$hiddenCompPrevDeveloper = $pInfo["hidden-comp-preview"]["developer"] ?? 1;
 
 // Database (Users)
 $db_users = new SQLite3("./database/users.db");
@@ -48,6 +58,24 @@ $db_users->exec("CREATE TABLE IF NOT EXISTS users(
 	disabled BOOLEAN NOT NULL DEFAULT '',
 	developer BOOLEAN NOT NULL DEFAULT ''
 )");
+
+// Database (Components)
+$db_comps = new SQLite3("./database/components.db");
+$db_comps ->exec("CREATE TABLE IF NOT EXISTS components(
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	name TEXT NOT NULL DEFAULT '',
+	hidden BOOL NOT NULL DEFAULT 0
+)");
+
+// Hide Component
+if (isset($hideComp)) {
+	$db_comps->exec("UPDATE components SET hidden=1 WHERE name='$hideComp'");
+}
+
+// Show Component
+if (isset($showComp)) {
+	$db_comps->exec("UPDATE components SET hidden=0 WHERE name='$showComp'");
+}
 
 // Time Tracking
 function convertSeconds($seconds) {
@@ -75,6 +103,14 @@ $users = [];
 
 while ($row = $entries->fetchArray()) {
 	$users[$row["username"]] = ["password" => $row["password"], "disabled" => $row["disabled"], "developer" => $row["developer"], "id" => $row["id"]];
+}
+
+// Fetch hidden Comps 
+$entries = $db_comps->query("SELECT * FROM components");
+$hiddenComps = [];
+
+while ($row = $entries->fetchArray()) {
+	$hiddenComps[$row["name"]] = $row["hidden"];
 }
 
 // Role-Management
@@ -200,6 +236,13 @@ if (isset($deletePage) && isset($pagePath)) {
 	system("rm -rf ".escapeshellarg("${pagePath}/${deletePage}"));
 }
 
+// Save all Components if not already
+foreach ($components as $x) {
+	if (empty($hiddenComps)) {
+		$db_comps->exec("INSERT INTO components (name) VALUES ('$x')");
+	}
+}
+
 //Login
 if (($username && $password)) {
 	if (!$users[$username]["disabled"]) {
@@ -302,8 +345,8 @@ if ($deletePostList) {
 			<div class="">
 				<h1 class="text-red-500 text-3xl text-center mb-5">Login</h1>
 				<form action="./" method="POST" name="loginForm" class="grid gap-y-2">
-					<input type="text" name="username" class="form-input">
-					<input type="password" name="password" id="" class="form-input">
+					<input type="text" name="username" class="form-input dev">
+					<input type="password" name="password" id="" class="form-input dev">
 					<button onclick="submit('loginForm')" class="p-1 rounded-md bg-slate-300 hover:bg-slate-400 w-fit px-3 ml-auto">Submit</button>
 				</form>
 				<?php if ($wrongData) : ?>
@@ -420,7 +463,7 @@ if ($deletePostList) {
 		<div class="message-wrapper fixed bg-slate-500 top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%] w-[500px] h-[250px] rounded-md justify-center hidden text-lg z-[150]">
 			<div class="w-10/12 h-1/2 text-center mt-4">
 				<h3 class="mb-2 text-2xl">Was ist ihnen aufgefallen?</h3>
-				<textarea id="message-bug" class="w-full h-full rounded-sm form-textarea"></textarea>
+				<textarea id="message-bug" class="dev w-full h-full rounded-sm form-textarea"></textarea>
 				<div class="flex-grow flex justify-end">
 					<button id="submit-message" class="px-2 py-1 bg-blue-300 rounded-md">Submit</button>
 				</div>
@@ -553,7 +596,7 @@ if ($deletePostList) {
 
 						<!-- Submit Button -->
 						<div class="absolute bottom-5 right-5 flex gap-2">
-							<input type="text" class="border-2 rounded-sm form-input" placeholder="Pagename" name="pagename" required>
+							<input type="text" class="dev border-2 rounded-sm form-input" placeholder="Pagename" name="pagename" required>
 							<button type="submit" class="bg-lime-500 px-4 py-1 rounded-md border-2 border-lime-500 hover:bg-transparent transition-colors">Generate</button>
 							<input type="text" class="hidden" id="comp-transmitter" name="comps">
 						</div>
@@ -648,12 +691,12 @@ if ($deletePostList) {
 					<!-- Adding Users -->
 					<div class="user-adding-wrapper absolute bottom-2 left-2">
 						<form action="./" method="POST" class="flex gap-3">
-							<input type="text" placeholder="Username" name="add-user" class="border-2 rounded-sm form-input">
+							<input type="text" placeholder="Username" name="add-user" class="dev border-2 rounded-sm form-input">
 							<div class="flex items-center gap-2">
 								<p>Roles: </p>
 								<ul>
 									<li>
-										<input type="checkbox" name="add-developer" class="form-checkbox">
+										<input type="checkbox" name="add-developer" class="dev form-checkbox">
 										<label for="add-developer">Developer</label>
 									</li>
 								</ul>
@@ -779,11 +822,85 @@ if ($deletePostList) {
 									element.style.removeProperty("border");
 								}
 							}
-
 						}
 					});
 				});
 			}
+
+			divs.forEach((element) => {
+				element.classList.forEach((classname) => {
+					if (classname.startsWith("ce_")) {
+						element.style.setProperty("position", "relative", "important");
+
+						const hiddenComps = <?=json_encode($hiddenComps)?>;
+						const elementName = classname.replace("ce_", "");
+
+						<?php if (!$devMode) : ?>
+							if (hiddenComps[elementName] ?? false) {
+								if (<?=$hiddenCompPrevDefault?>) {
+									element.classList.add("hidden-overlay-prev");
+								}else {
+									element.classList.add("hidden-overlay");
+								}
+							} 
+						<?php endif; ?>
+
+						<?php if ($devMode && $utilButtons) : ?>
+							if (hiddenComps[elementName] ?? false) {
+								if (<?=$hiddenCompPrevDeveloper?>) {
+									element.classList.add("hidden-overlay-prev");
+								}else {
+									element.classList.add("hidden-overlay");
+								}
+							} 
+
+							// Wrapper
+							let wrapper = document.createElement("form");
+							wrapper.classList.add("utilButtonWrapper")
+							wrapper.method = "POST";
+							wrapper.action = "./";
+
+							// Hidden Input
+							let hiddenInput = document.createElement("input");
+							hiddenInput.name = "hide-comp";
+							hiddenInput.value = elementName;
+							hiddenInput.classList.add("hidden");
+
+							// Hide Button
+							let hideButton = document.createElement("button");
+							let hideImg = document.createElement("img");
+							hideImg.src = "./assets/icons/eye.png";
+							hideButton.type = "submit";
+							hideButton.classList.add("hideButton");
+							hideButton.title = "Hide Element";
+
+
+							// Component Wrapper (anchor)
+							let componentWrapper = document.createElement("a");
+							componentWrapper.href = `./project/src/components/${elementName}/${elementName}.html`;
+
+							// Component Button
+							let componentButton = document.createElement("img");
+							componentButton.src = "./assets/icons/puzzle.png";
+							componentButton.classList.add("componentButton");
+							componentButton.title = "View Component";
+
+							if (hiddenComps[elementName] ?? false) {
+								hideImg.src = "./assets/icons/hidden.png";
+								hiddenInput.name = "show-comp";
+							} 
+
+							wrapper.appendChild(hiddenInput);
+							hideButton.appendChild(hideImg);
+							element.appendChild(wrapper);
+							wrapper.appendChild(hideButton);
+							wrapper.appendChild(componentWrapper);
+							componentWrapper.appendChild(componentButton);
+						<?php endif; ?>
+					}
+				});
+			});
+
 			// Submit Message
 			document.getElementById("submit-message").onclick = (e) => {
 				const messageBoxVal = document.getElementById("message-bug").value;
@@ -841,14 +958,46 @@ if ($deletePostList) {
 			}
 		<?php endif; ?>
 
-		// Control Fullscreen mode
-		window.onresize = () => {
-			if (window.innerHeight == screen.height) {
-				submit("fullscreen-form");
-			}else {
-				submit("fullscreen-form-exit");
+		<?php if ($fullscreenMode) : ?>
+			// Control Fullscreen mode
+			window.onresize = () => {
+				if (window.innerHeight == screen.height) {
+					submit("fullscreen-form");
+				}else {
+					submit("fullscreen-form-exit");
+				}
 			}
-		}
+		<?php endif; ?>
+
+		<?php if ($fillForms) : ?>
+			fetch("https://random-data-api.com/api/users/random_user")
+				.then(response => response.json())
+				.then(data => {
+					const inputs = document.querySelectorAll("input:not(.hidden):not(.dev)");
+					const textareas = document.querySelectorAll("textarea:not(.dev)");
+					const checkboxes = document.querySelectorAll("input[type=checkbox]:not(.dev)");
+
+					inputs.forEach(input => {
+						if (input.type == "email") {
+							input.value = data["email"];
+						}
+						else if(input.type == "tel") {
+							input.value = data["phone_number"];
+						}
+						else if(input.type == "text") {
+							input.value = `${data["first_name"]} ${data["last_name"]}`;
+						}
+					});
+
+					textareas.forEach(textarea => {
+						textarea.value = "Lorem ipsum dolor sit amet consectetur adipisicing elit. Maxime mollitia, molestiae quas vel sint commodi repudiandae consequuntur voluptatum laborum numquam blanditiis harum quisquam eius sed odit fugiat iusto fuga praesentium optio, eaque rerum!";
+					});
+
+					checkboxes.forEach(checkbox => {
+						checkbox.checked = true;
+					});
+				});
+		<?php endif; ?>
 
 	</script>
 </body>

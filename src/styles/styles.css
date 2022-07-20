@@ -23,6 +23,7 @@ body, html {
   position: absolute; 
   right: 0;
   bottom: 0;
+  z-index: 50;
   animation:slide-left 0.2s linear both}@keyframes slide-left{0%{transform:translateX(50px)}100%{transform:translateX(0)}
 }
 
@@ -34,6 +35,7 @@ body, html {
   position: absolute; 
   right: 0;
   bottom: 0;
+  z-index: 50;
 }
 
 :target::before {
@@ -44,7 +46,7 @@ body, html {
   position: absolute;
   left:0;
   top: 0;
-  z-index: 1;
+  z-index: 50;
   animation:slide-right 0.2s linear both}@keyframes slide-right{0%{transform:translateX(-100px)}100%{transform:translateX(0px)}
 }
 
@@ -59,4 +61,65 @@ body, html {
 .disabled {
   pointer-events: none !important;
   opacity: 0.65 !important;
+}
+
+.utilButtonWrapper {
+  position: absolute;
+  display: flex;
+  gap: 0.75rem;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 9999;
+}
+
+.hideButton {
+  width: 35px;
+  height: 35px;
+  cursor: pointer;
+}
+
+.componentButton{
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+}
+
+.hideButton:hover, .componentButton:hover {
+  filter: invert(15%) sepia(62%) saturate(7374%) hue-rotate(1deg) brightness(97%) contrast(120%);
+}
+
+.hidden-overlay-prev::after {
+  content: "Not finished";
+  font-size: 42px;
+  letter-spacing: 1.25rem;
+  background-color: grey;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  transition: background-color 500ms ease-in;
+  border: 2px solid black;
+}
+
+.hidden-overlay-prev:hover::after{
+  content: "";
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.hidden-overlay::after {
+  content: "Not finished";
+  font-size: 42px;
+  letter-spacing: 1.25rem;
+  background-color: grey;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  border: 2px solid black;
 }

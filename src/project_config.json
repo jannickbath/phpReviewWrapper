@@ -1,0 +1,13 @@
+{
+    "_comment": "Here you can disable/enable some features and add additional links",
+    "design": "",
+    "design-mobile": "",
+    "ticket": "",
+    "util-buttons": 1,
+    "fullscreen-mode": 0,
+    "hidden-comp-preview": {
+        "default": 0,
+        "developer": 1
+    },
+    "fill-forms": 0 
+}
