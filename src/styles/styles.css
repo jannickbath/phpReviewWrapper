@@ -98,15 +98,17 @@ body, html {
   height: 100%;
   top: 0;
   left: 0;
+  z-index: 15;
   display: grid;
   place-items: center;
-  transition: background-color 500ms ease-in;
+  transition: all 400ms ease-in;
+  color: rgba(0, 0, 0, 1);
   border: 2px solid black;
 }
 
 .hidden-overlay-prev:hover::after{
-  content: "";
   background-color: rgba(0, 0, 0, 0.5) !important;
+  color: rgba(0, 0, 0, 0.0) !important;
 }
 
 .hidden-overlay::after {
@@ -119,6 +121,7 @@ body, html {
   height: 100%;
   top: 0;
   left: 0;
+  z-index: 15;
   display: grid;
   place-items: center;
   border: 2px solid black;
