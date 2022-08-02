@@ -420,29 +420,28 @@ if ($deletePostList) {
 			</form>
 		</div>
 
-		<div class="fixed flex justify-between w-full px-10 arrow-navigation top-1/2 translate-y-[-50%] child:cursor-pointer z-[500]">
-			<?php 
-				$phpArr = [];
-				foreach ($pageList as $page) {
-					$phpFile = array_values(array_filter($page, function($value) {
-						return pathinfo($value, PATHINFO_EXTENSION) == "php";
-					}))[0];
-					$phpArr = [...$phpArr, $phpFile];
-				}
-			?>
-			<form action="./" method="POST" id="navigate-page-previous">
-				<button class="arrow-back" type="submit" title="Navigate Back">
-					<img src="./assets/icons/arrow-back.png" alt="" class="w-8 h-8">
-				</button>
-				<input type="text" value="<?=$phpArr[array_search($_SESSION['newPage'], $phpArr) - 1] ?? ''?>" name="navigate-page" hidden>
-			</form>
-			<form action="./" method="POST" type="submit" id="navigate-page-next">
-				<button class="arrow-next" title="Navigate Forward">
-					<img src="./assets/icons/arrow-next.png" alt="" class="w-8 h-8">
-				</button>
-				<input type="text" value="<?=$phpArr[array_search($_SESSION['newPage'], $phpArr) + 1] ?? ''?>" name="navigate-page" hidden>
-			</form>
-		</div>	
+		<?php 
+			$phpArr = [];
+			foreach ($pageList as $page) {
+				$phpFile = array_values(array_filter($page, function($value) {
+					return pathinfo($value, PATHINFO_EXTENSION) == "php";
+				}))[0];
+				$phpArr = [...$phpArr, $phpFile];
+			}
+		?>
+		<form action="./" method="POST" id="navigate-page-previous" class="fixed pl-10 top-1/2 translate-y-[-50%] cursor-pointer z-[500] left-0">
+			<button class="arrow-back" type="submit" title="Navigate Back">
+				<img src="./assets/icons/arrow-back.png" alt="" class="w-8 h-8">
+			</button>
+			<input type="text" value="<?=$phpArr[array_search($_SESSION['newPage'], $phpArr) - 1] ?? ''?>" name="navigate-page" hidden>
+		</form>
+
+		<form action="./" method="POST" type="submit" id="navigate-page-next" class="fixed pr-10 top-1/2 translate-y-[-50%] cursor-pointer z-[500] right-0">
+			<button class="arrow-next" title="Navigate Forward">
+				<img src="./assets/icons/arrow-next.png" alt="" class="w-8 h-8">
+			</button>
+			<input type="text" value="<?=$phpArr[array_search($_SESSION['newPage'], $phpArr) + 1] ?? ''?>" name="navigate-page" hidden>
+		</form>
 
 		<?php if ($siteOutOfRange): ?>
 			<div class="absolute top-1 right-0 px-6 py-3 transition-opacity bg-orange-400 rounded-lg alert slide-bottom z-[999999]">
@@ -564,17 +563,19 @@ if ($deletePostList) {
 					<h2 class="mx-auto mb-5 text-3xl w-fit">Seitenübersicht</h2>
 
 					<ul class="flex flex-wrap gap-5 child:grid child:gap-2 child:flex-grow">
+						<?php $seitenCounter = 0; ?>
 						<?php foreach ($pageList as $page) : ?>
 							<?php 
-							$phpFile = array_values(array_filter($page, function($value) {
-								return pathinfo($value, PATHINFO_EXTENSION) == "php";
-							}))[0];
-							$htmlFile = array_values(array_filter($page, function($value) {
-								return pathinfo($value, PATHINFO_EXTENSION) == "html";
-							}))[0];
+								$phpFile = array_values(array_filter($page, function($value) {
+									return pathinfo($value, PATHINFO_EXTENSION) == "php";
+								}))[0];
+								$htmlFile = array_values(array_filter($page, function($value) {
+									return pathinfo($value, PATHINFO_EXTENSION) == "html";
+								}))[0];
+								$seitenCounter += 1;
 							?>
-							<li>
-								<h3 class="text-2xl font-bold text-center title"><?=basename($htmlFile, ".html");?></h3>
+							<li class="<?php if($phpFile == $_SESSION["newPage"]) {echo "border-[10px] border-green-400";} ?>">
+								<h3 class="text-2xl font-bold text-center title"><?=$seitenCounter?>. <?=basename($htmlFile, ".html");?></h3>
 								<iframe src="<?=$htmlFile?>" frameborder="0" class="w-full mx-auto"></iframe>
 								<div class="flex items-center justify-between">
 									<form action="./" method="POST">
