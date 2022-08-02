@@ -16,6 +16,7 @@ $_SESSION["username"] = ($_SESSION["username"] ?? false);
 $_SESSION["newPage"] = ($_SESSION["newPage"] ?? null);
 
 $fullscreen = isset($_POST["fullscreen-mode"]) ?? false;
+$siteOutOfRange = false;
 
 // Login-Specific Variables 
 $wrongData = false;
@@ -230,6 +231,8 @@ if (isset($filename) && isset($compList) || isset($recompile)) {
 	$phpFile = fopen("${pagePath}/${filename}/${filename}.php", "w");
 	fwrite($phpFile, $newContent);
 	fclose($phpFile);
+	
+	// TODO Change href's
 }
 
 if (isset($deletePage) && isset($pagePath)) {
@@ -266,8 +269,10 @@ if ($_SESSION["loggedIn"]) {
 }
 
 // Page
-if (isset($_POST["navigate-page"])) {
+if ($_POST["navigate-page"] != "") {
 	$_SESSION["newPage"] = $_POST["navigate-page"];
+}else if (isset($_POST["navigate-page"]) && $_POST["navigate-page"] == "") {
+	$siteOutOfRange = true;
 }
 
 //Logout
@@ -330,7 +335,7 @@ if ($deletePostList) {
 </head>
 
 <body <?php if (!$_SESSION["loggedIn"]) {
-			echo "class='bg-3 overflow-hidden bg-no-repeat bg-cover'";
+			echo "class='overflow-hidden bg-no-repeat bg-cover bg-3'";
 		} ?>>
 	<?php if ($_SESSION["loggedIn"]) : ?>
 		<?php if (isset($_SESSION["newPage"])) : ?>
@@ -341,17 +346,17 @@ if ($deletePostList) {
 		<?php endif; ?>
 	<?php else : ?>
 		<!-- Login Form -->
-		<div class="wrapper w-full h-full grid place-items-center">
+		<div class="grid w-full h-full wrapper place-items-center">
 			<div class="">
-				<h1 class="text-red-500 text-3xl text-center mb-5">Login</h1>
+				<h1 class="mb-5 text-3xl text-center text-red-500">Login</h1>
 				<form action="./" method="POST" name="loginForm" class="grid gap-y-2">
 					<input type="text" name="username" class="form-input dev">
 					<input type="password" name="password" id="" class="form-input dev">
-					<button onclick="submit('loginForm')" class="p-1 rounded-md bg-slate-300 hover:bg-slate-400 w-fit px-3 ml-auto">Submit</button>
+					<button onclick="submit('loginForm')" class="p-1 px-3 ml-auto rounded-md bg-slate-300 hover:bg-slate-400 w-fit">Submit</button>
 				</form>
 				<?php if ($wrongData) : ?>
 					<!-- Alert Wrong Data-->
-					<div class="bg-red-400 py-3 px-6 rounded-lg absolute bottom-0 right-0 alert slide-top transition-opacity">
+					<div class="absolute bottom-0 right-0 px-6 py-3 transition-opacity bg-red-400 rounded-lg alert slide-top">
 						<p>Es ist etwas schiefgelaufen! Bitte überprüfen sie ihre Eingabe.</p>
 						<button class="absolute top-0 right-2 close-button">
 							x
@@ -360,7 +365,7 @@ if ($deletePostList) {
 				<?php endif; ?>
 				<?php if ($disabled) : ?>
 					<!-- Alert Wrong Data-->
-					<div class="bg-orange-400 py-3 px-6 rounded-lg absolute bottom-0 right-0 alert slide-top transition-opacity">
+					<div class="absolute bottom-0 right-0 px-6 py-3 transition-opacity bg-orange-400 rounded-lg alert slide-top">
 						<p>Ihr Benutzer ist derzeit deaktiviert! Bitte wenden sie sich an einen Administrator.</p>
 						<button class="absolute top-0 right-2 close-button">
 							x
@@ -374,35 +379,35 @@ if ($deletePostList) {
 	<?php if ($_SESSION["loggedIn"] && !$fullscreen) : ?>
 		<div class="wrapper flex fixed right-10 bottom-5 gap-2 items-center z-[99999]">
 			<!-- Submit Button -->
-			<form action="./" method="POST" id="submitForm" name="submitForm" class="w-fit h-full bg-green-400 rounded-md">
+			<form action="./" method="POST" id="submitForm" name="submitForm" class="h-full bg-green-400 rounded-md w-fit">
 				<input type="text" class="hidden" name="message-content">
-				<button class="bg-green-400 hover:bg-green-600 p-2 rounded-md submit-button hidden" type="submit" title="submit">
-					<img src="./assets/icons/submit.png" class="h-5 w-5" alt="">
+				<button class="hidden p-2 bg-green-400 rounded-md hover:bg-green-600 submit-button" type="submit" title="submit">
+					<img src="./assets/icons/submit.png" class="w-5 h-5" alt="">
 				</button>
 			</form>
 
 			<!-- Edit Button -->
-			<button class="bg-red-200 hover:bg-red-400 p-2 rounded-md edit-button h-fit" title="Add a Description to a component">
-				<img src="./assets/icons/edit.png" class="h-5 w-5" alt="">
+			<button class="p-2 bg-red-200 rounded-md hover:bg-red-400 edit-button h-fit" title="Add a Description to a component">
+				<img src="./assets/icons/edit.png" class="w-5 h-5" alt="">
 			</button>
 
 			<?php if ($designUrl != "") : ?>
 				<!-- Design -->
-				<div class="flex flex-row-reverse group gap-2">
-					<a class="bg-red-200 p-2 rounded-md hover:bg-red-400 mx-auto" href="<?=$designUrl?>" rel="noopener noreferrer" target="_blank">Design</a>
-					<a class="bg-red-200 p-2 rounded-md hover:bg-red-400 mx-auto group-hover:block hidden" href="<?=$designUrl_mobile?>" rel="noopener noreferrer" target="_blank" class="">Design - Mobile</a>
+				<div class="flex flex-row-reverse gap-2 group">
+					<a class="p-2 mx-auto bg-red-200 rounded-md hover:bg-red-400" href="<?=$designUrl?>" rel="noopener noreferrer" target="_blank">Design</a>
+					<a class="hidden p-2 mx-auto bg-red-200 rounded-md hover:bg-red-400 group-hover:block" href="<?=$designUrl_mobile?>" rel="noopener noreferrer" target="_blank" class="">Design - Mobile</a>
 				</div>
 			<?php endif; ?>
 
 			<?php if ($ticketUrl != "") : ?>
 				<!-- Ticket -->
-				<div class="flex flex-row-reverse group gap-2">
-					<a class="bg-red-200 p-2 rounded-md hover:bg-red-400 mx-auto" href="<?=$ticketUrl?>" rel="noopener noreferrer" target="_blank" class="">Ticket</a>
+				<div class="flex flex-row-reverse gap-2 group">
+					<a class="p-2 mx-auto bg-red-200 rounded-md hover:bg-red-400" href="<?=$ticketUrl?>" rel="noopener noreferrer" target="_blank" class="">Ticket</a>
 
 					<!-- Zeit buchen -->
-					<form action="./" method="POST" class="w-fit h-fit hidden group-hover:block">
+					<form action="./" method="POST" class="hidden w-fit h-fit group-hover:block">
 						<input type="text" name="time_stop" class="hidden">
-						<button class="bg-red-200 p-2 rounded-md hover:bg-red-400 mx-auto">Zeit buchen</button>
+						<button class="p-2 mx-auto bg-red-200 rounded-md hover:bg-red-400">Zeit buchen</button>
 					</form>
 				</div>
 
@@ -411,49 +416,82 @@ if ($deletePostList) {
 			<!-- Log out -->
 			<form action="./" method="POST" name="logoutForm" class="w-fit h-fit">
 				<input type="text" name="logout" class="hidden">
-				<button onclick="submit('logoutForm')" class="bg-red-200 p-2 rounded-md hover:bg-red-400 mx-auto">Logout</button>
+				<button onclick="submit('logoutForm')" class="p-2 mx-auto bg-red-200 rounded-md hover:bg-red-400">Logout</button>
 			</form>
 		</div>
 
+		<div class="fixed flex justify-between w-full px-10 arrow-navigation top-1/2 translate-y-[-50%] child:cursor-pointer z-[500]">
+			<?php 
+				$phpArr = [];
+				foreach ($pageList as $page) {
+					$phpFile = array_values(array_filter($page, function($value) {
+						return pathinfo($value, PATHINFO_EXTENSION) == "php";
+					}))[0];
+					$phpArr = [...$phpArr, $phpFile];
+				}
+			?>
+			<form action="./" method="POST" id="navigate-page-previous">
+				<button class="arrow-back" type="submit" title="Navigate Back">
+					<img src="./assets/icons/arrow-back.png" alt="" class="w-8 h-8">
+				</button>
+				<input type="text" value="<?=$phpArr[array_search($_SESSION['newPage'], $phpArr) - 1] ?? ''?>" name="navigate-page" hidden>
+			</form>
+			<form action="./" method="POST" type="submit" id="navigate-page-next">
+				<button class="arrow-next" title="Navigate Forward">
+					<img src="./assets/icons/arrow-next.png" alt="" class="w-8 h-8">
+				</button>
+				<input type="text" value="<?=$phpArr[array_search($_SESSION['newPage'], $phpArr) + 1] ?? ''?>" name="navigate-page" hidden>
+			</form>
+		</div>	
+
+		<?php if ($siteOutOfRange): ?>
+			<div class="absolute top-1 right-0 px-6 py-3 transition-opacity bg-orange-400 rounded-lg alert slide-bottom z-[999999]">
+				<p>Seiten-Index out of range</p>
+				<button class="absolute top-0 right-2 close-button">
+					x
+				</button>
+			</div>
+		<?php endif; ?>
+
 		<div class="fixed bottom-5 left-2 flex gap-2 z-[99999]">
 			<!-- Seitenübersicht-Button -->
-			<form action="./" method="POST" class="bg-red-200 rounded-md hover:bg-red-400 z-10">
+			<form action="./" method="POST" class="z-10 bg-red-200 rounded-md hover:bg-red-400">
 				<button class="p-2 rounded-md forum-button" title="Open the Page Overview" type="submit">
-					<img src="./assets/icons/pages.png" class="h-5 w-5" alt="">
+					<img src="./assets/icons/pages.png" class="w-5 h-5" alt="">
 				</button>
 				<input type="text" class="hidden" name="seiten-active">
 			</form>
 
 			<!-- Forum-Button -->
-			<form action="./" method="POST" class="bg-red-200 rounded-md hover:bg-red-400 z-10">
+			<form action="./" method="POST" class="z-10 bg-red-200 rounded-md hover:bg-red-400">
 				<button class="p-2 rounded-md forum-button" title="Open the forum" type="submit">
-					<img src="./assets/icons/chat.png" class="h-5 w-5" alt="">
+					<img src="./assets/icons/chat.png" class="w-5 h-5" alt="">
 				</button>
 				<input type="text" class="hidden" name="forum-active">
 			</form>
 
 			<?php if ($devMode) : ?> 
 			<!-- Developer Settings -->
-			<form action="./" method="POST" class="bg-red-200 rounded-md hover:bg-red-400 z-10">
+			<form action="./" method="POST" class="z-10 bg-red-200 rounded-md hover:bg-red-400">
 				<button class="p-2 rounded-md forum-button" title="Developer Settings" type="submit">
-					<img src="./assets/icons/settings.png" class="h-5 w-5" alt="">
+					<img src="./assets/icons/settings.png" class="w-5 h-5" alt="">
 				</button>
 				<input type="text" class="hidden" name="page-creation-active">
 			</form>
 
 			<!-- User Management -->
-			<form action="./" method="POST" class="bg-red-200 rounded-md hover:bg-red-400 z-10">
+			<form action="./" method="POST" class="z-10 bg-red-200 rounded-md hover:bg-red-400">
 				<button class="p-2 rounded-md forum-button" title="User Management" type="submit">
-					<img src="./assets/icons/user.png" class="h-5 w-5" alt="">
+					<img src="./assets/icons/user.png" class="w-5 h-5" alt="">
 				</button>
 				<input type="text" class="hidden" name="user-management">
 			</form>
 			<?php endif; ?>
 
 			<!-- Time Management -->
-			<!-- <form action="./" method="POST" class="bg-red-200 rounded-md hover:bg-red-400 z-10">
+			<!-- <form action="./" method="POST" class="z-10 bg-red-200 rounded-md hover:bg-red-400">
 				<button class="p-2 rounded-md forum-button" title="Time Management" type="submit">
-					<img src="./assets/icons/clock.png" class="h-5 w-5" alt="">
+					<img src="./assets/icons/clock.png" class="w-5 h-5" alt="">
 				</button>
 				<input type="text" class="hidden" name="time_stop">
 			</form> -->
@@ -461,10 +499,10 @@ if ($deletePostList) {
 
 		<!-- Message Box -->
 		<div class="message-wrapper fixed bg-slate-500 top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%] w-[500px] h-[250px] rounded-md justify-center hidden text-lg z-[150]">
-			<div class="w-10/12 h-1/2 text-center mt-4">
+			<div class="w-10/12 mt-4 text-center h-1/2">
 				<h3 class="mb-2 text-2xl">Was ist ihnen aufgefallen?</h3>
-				<textarea id="message-bug" class="dev w-full h-full rounded-sm form-textarea"></textarea>
-				<div class="flex-grow flex justify-end">
+				<textarea id="message-bug" class="w-full h-full rounded-sm dev form-textarea"></textarea>
+				<div class="flex justify-end flex-grow">
 					<button id="submit-message" class="px-2 py-1 bg-blue-300 rounded-md">Submit</button>
 				</div>
 			</div>
@@ -479,10 +517,10 @@ if ($deletePostList) {
 		<?php if ($forum) : ?>
 			<div class="forum fixed left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] bg-white z-[200] w-8/12 h-[600px] rounded-sm p-4 flex flex-col justify-between">
 				<div class="flex-grow">
-					<h2 class="w-fit mx-auto text-3xl mb-5">Aktuelle Hinweise</h2>
+					<h2 class="mx-auto mb-5 text-3xl w-fit">Aktuelle Hinweise</h2>
 
 					<!-- Messages -->
-					<ul class="grid gap-3 grid-cols-3 child:bg-slate-300 child-hover:bg-slate-400 child:rounded-md child:p-2 child:relative child:transition-colors child-hover:shadow-md">
+					<ul class="grid grid-cols-3 gap-3 child:bg-slate-300 child-hover:bg-slate-400 child:rounded-md child:p-2 child:relative child:transition-colors child-hover:shadow-md">
 						<?php foreach (getEntries() as $item => $element) : ?>
 							<li title="Navigate to element" class="form-element">
 								<a href="#<?= $element['element'] ?>">
@@ -493,7 +531,7 @@ if ($deletePostList) {
 									<p class="text-lg"><?= $element["message"] ?></p>
 									<span class="hidden" aria-hidden="true" id="post-id"><?= $element["id"] ?></span>
 								</a>
-								<button class="absolute top-0 right-0 py-1 px-2 delete-post" title="delete message">x</button>
+								<button class="absolute top-0 right-0 px-2 py-1 delete-post" title="delete message">x</button>
 							</li>
 						<?php endforeach; ?>
 						<?php if (empty(getEntries())): ?>
@@ -502,10 +540,10 @@ if ($deletePostList) {
 					</ul>
 				</div>
 
-				<div class="footer flex justify-end">
+				<div class="flex justify-end footer">
 					<!-- Delete Confirm Button -->
 					<form action="./" method="POST">
-						<button class="bg-red-200 text-red-500 font-bold rounded-md px-3 py-2 hover:bg-red-500 hover:text-red-200 transition-colors hidden" id="confirm-delete">Delete Posts</button>
+						<button class="hidden px-3 py-2 font-bold text-red-500 transition-colors bg-red-200 rounded-md hover:bg-red-500 hover:text-red-200" id="confirm-delete">Delete Posts</button>
 						<input type="text" name="delete-post-list" id="delete-post-list" class="hidden">
 					</form>
 				</div>
@@ -523,9 +561,9 @@ if ($deletePostList) {
 		<?php if ($seiten): ?>
 			<div class="forum fixed left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] bg-white z-[200] w-8/12 h-[600px] rounded-sm p-4 flex flex-col justify-between">
 				<div class="flex-grow">
-					<h2 class="w-fit mx-auto text-3xl mb-5">Seitenübersicht</h2>
+					<h2 class="mx-auto mb-5 text-3xl w-fit">Seitenübersicht</h2>
 
-					<ul class="flex gap-5 child:grid child:gap-2 child:flex-grow flex-wrap">
+					<ul class="flex flex-wrap gap-5 child:grid child:gap-2 child:flex-grow">
 						<?php foreach ($pageList as $page) : ?>
 							<?php 
 							$phpFile = array_values(array_filter($page, function($value) {
@@ -536,8 +574,8 @@ if ($deletePostList) {
 							}))[0];
 							?>
 							<li>
-								<h3 class="title text-center text-2xl font-bold"><?=basename($htmlFile, ".html");?></h3>
-								<iframe src="<?=$htmlFile?>" frameborder="0" class="mx-auto w-full"></iframe>
+								<h3 class="text-2xl font-bold text-center title"><?=basename($htmlFile, ".html");?></h3>
+								<iframe src="<?=$htmlFile?>" frameborder="0" class="w-full mx-auto"></iframe>
 								<div class="flex items-center justify-between">
 									<form action="./" method="POST">
 										<input type="text" class="hidden" value="<?=$phpFile?>" name="navigate-page">
@@ -591,19 +629,19 @@ if ($deletePostList) {
 								<?php endforeach; ?>
 							</select>
 						</div>
-						<button type="button" class="bg-lime-700 px-4 py-1 text-white rounded-md" id="add-component">Add +</button>
+						<button type="button" class="px-4 py-1 text-white rounded-md bg-lime-700" id="add-component">Add +</button>
 
 
 						<!-- Submit Button -->
-						<div class="absolute bottom-5 right-5 flex gap-2">
-							<input type="text" class="dev border-2 rounded-sm form-input" placeholder="Pagename" name="pagename" required>
-							<button type="submit" class="bg-lime-500 px-4 py-1 rounded-md border-2 border-lime-500 hover:bg-transparent transition-colors">Generate</button>
+						<div class="absolute flex gap-2 bottom-5 right-5">
+							<input type="text" class="border-2 rounded-sm dev form-input" placeholder="Pagename" name="pagename" required>
+							<button type="submit" class="px-4 py-1 transition-colors border-2 rounded-md bg-lime-500 border-lime-500 hover:bg-transparent">Generate</button>
 							<input type="text" class="hidden" id="comp-transmitter" name="comps">
 						</div>
 					</form>
 				</div>
 
-				<div class="mx-auto p-5 flex flex-wrap">
+				<div class="flex flex-wrap p-5 mx-auto">
 					<ul id="page-structure" class="child:p-2 child:bg-violet-400 child:rounded-md flex gap-12 child:h-fit child:after:content-['→'] child:after:absolute child:after:-right-10 child:after:top-1/2 child:after:-translate-y-[50%] child:after:text-2xl child:relative last:child:after:hidden child:text-center flex-wrap">
 						<!-- Content Managed by JS -->
 					</ul>
@@ -622,9 +660,9 @@ if ($deletePostList) {
 		<?php if ($userManagement): ?>
 			<div class="forum fixed left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] bg-white z-[200] w-8/12 h-[600px] rounded-sm p-4 flex flex-col justify-between">
 				<div class="flex-grow">
-					<h2 class="w-fit mx-auto text-3xl mb-5">User-Management</h2>
+					<h2 class="mx-auto mb-5 text-3xl w-fit">User-Management</h2>
 
-					<ul class="child:flex grid gap-3 child:gap-2 child:py-2 child:items-center child:relative">
+					<ul class="grid gap-3 child:flex child:gap-2 child:py-2 child:items-center child:relative">
 						<?php foreach ($users as $username => $detail) : ?>
 							<li>
 								<img src="./assets/icons/user.png" alt="" class="w-7 h-7">
@@ -638,19 +676,19 @@ if ($deletePostList) {
 										<?php if ($detail["developer"]) : ?>
 											<input type="text" name="remove-role" value="developer" class="hidden">
 											<?php if ($username != $_SESSION["username"]) : ?>
-												<button type="submit" class="bg-red-500 px-4 py-1 rounded-md" title="Remove developer role">Remove</button>
+												<button type="submit" class="px-4 py-1 bg-red-500 rounded-md" title="Remove developer role">Remove</button>
 											<?php else : ?>
-												<button type="submit" class="bg-red-500 px-4 py-1 rounded-md disabled" title="Remove developer role">Remove</button>
+												<button type="submit" class="px-4 py-1 bg-red-500 rounded-md disabled" title="Remove developer role">Remove</button>
 											<?php endif; ?>
 										<?php else : ?>
 											<input type="text" name="add-role" value="developer" class="hidden">
-											<button type="submit" class="bg-green-500 px-4 py-1 rounded-md" title="Add developer role">Add</button>
+											<button type="submit" class="px-4 py-1 bg-green-500 rounded-md" title="Add developer role">Add</button>
 										<?php endif; ?>
 									</div>
 								</form>
 
 								<?php if ($username != $_SESSION["username"]) : ?>
-								<div class="button-section absolute right-0 flex gap-2">
+								<div class="absolute right-0 flex gap-2 button-section">
 									<form action="./" method="POST">
 										<input type="text" class="hidden" name="user_id" value="<?=$detail['id']?>">
 
@@ -679,7 +717,7 @@ if ($deletePostList) {
 									</form>
 								</div>
 								<?php else : ?>
-								<div class="user-info absolute right-0 bg-blue-300 h-full p-2 grid place-items-center font-bold rounded-lg">
+								<div class="absolute right-0 grid h-full p-2 font-bold bg-blue-300 rounded-lg user-info place-items-center">
 									You
 								</div>
 								<?php endif; ?>
@@ -689,9 +727,9 @@ if ($deletePostList) {
 					</ul>
 
 					<!-- Adding Users -->
-					<div class="user-adding-wrapper absolute bottom-2 left-2">
+					<div class="absolute user-adding-wrapper bottom-2 left-2">
 						<form action="./" method="POST" class="flex gap-3">
-							<input type="text" placeholder="Username" name="add-user" class="dev border-2 rounded-sm form-input">
+							<input type="text" placeholder="Username" name="add-user" class="border-2 rounded-sm dev form-input">
 							<div class="flex items-center gap-2">
 								<p>Roles: </p>
 								<ul>
@@ -701,7 +739,7 @@ if ($deletePostList) {
 									</li>
 								</ul>
 							</div>
-							<button type="submit" class="bg-green-400 rounded-md px-2 py-1">Add</button>
+							<button type="submit" class="px-2 py-1 bg-green-400 rounded-md">Add</button>
 						</form>
 					</div>
 				</div>
@@ -998,6 +1036,19 @@ if ($deletePostList) {
 					});
 				});
 		<?php endif; ?>
+
+		const prevPageForm = document.querySelector("#navigate-page-previous");
+		const nextPageForm = document.querySelector("#navigate-page-next");
+
+		document.onkeydown = (e) => {
+			if (e.code == "ArrowRight") {
+				nextPageForm.submit();
+			} 
+			
+			if (e.code == "ArrowLeft") {
+				prevPageForm.submit();
+			}
+		}
 
 	</script>
 </body>
