@@ -17,6 +17,7 @@ $_SESSION["newPage"] = ($_SESSION["newPage"] ?? null);
 
 $fullscreen = isset($_POST["fullscreen-mode"]) ?? false;
 $siteOutOfRange = false;
+$showHTML = 1;
 
 // Login-Specific Variables 
 $wrongData = false;
@@ -57,8 +58,13 @@ $db_users->exec("CREATE TABLE IF NOT EXISTS users(
 	username TEXT NOT NULL DEFAULT '',
 	password TEXT NOT NULL DEFAULT '',
 	disabled BOOLEAN NOT NULL DEFAULT '',
-	developer BOOLEAN NOT NULL DEFAULT ''
+	developer BOOLEAN NOT NULL DEFAULT '',
+	page TEXT NOT NULL DEFAULT '',
+	position TEXT NOT NULL DEFAULT '',
+	online BOOLEAN,
+	lastping INT
 )");
+// $db_users->exec("INSERT INTO users (username, developer, password) VALUES ('demouser', '0', 'demopass')");
 
 // Database (Components)
 $db_comps = new SQLite3("./database/components.db");
@@ -103,7 +109,7 @@ $entries = $db_users->query("SELECT * FROM users");
 $users = [];
 
 while ($row = $entries->fetchArray()) {
-	$users[$row["username"]] = ["password" => $row["password"], "disabled" => $row["disabled"], "developer" => $row["developer"], "id" => $row["id"]];
+	$users[$row["username"]] = ["password" => $row["password"], "disabled" => $row["disabled"], "developer" => $row["developer"], "id" => $row["id"], "position" => $row["position"], "online" => $row["online"], "lastping" => $row["lastping"]];
 }
 
 // Fetch hidden Comps 
@@ -232,7 +238,6 @@ if (isset($filename) && isset($compList) || isset($recompile)) {
 	fwrite($phpFile, $newContent);
 	fclose($phpFile);
 	
-	// TODO Change href's
 }
 
 if (isset($deletePage) && isset($pagePath)) {
@@ -322,7 +327,12 @@ if ($deletePostList) {
 	}
 }
 
+include "./activity.php";
+
+// ANCHOR PHP END
+
 ?>
+<?php if($showHTML): ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -487,13 +497,6 @@ if ($deletePostList) {
 			</form>
 			<?php endif; ?>
 
-			<!-- Time Management -->
-			<!-- <form action="./" method="POST" class="z-10 bg-red-200 rounded-md hover:bg-red-400">
-				<button class="p-2 rounded-md forum-button" title="Time Management" type="submit">
-					<img src="./assets/icons/clock.png" class="w-5 h-5" alt="">
-				</button>
-				<input type="text" class="hidden" name="time_stop">
-			</form> -->
 		</div>
 
 		<!-- Message Box -->
@@ -665,7 +668,7 @@ if ($deletePostList) {
 
 					<ul class="grid gap-3 child:flex child:gap-2 child:py-2 child:items-center child:relative">
 						<?php foreach ($users as $username => $detail) : ?>
-							<li>
+							<li id="<?=$username?>">
 								<img src="./assets/icons/user.png" alt="" class="w-7 h-7">
 								<h4><?=$username?> --> </h4>
 								<form action="./" method="POST" class="flex gap-5">
@@ -685,6 +688,10 @@ if ($deletePostList) {
 											<input type="text" name="add-role" value="developer" class="hidden">
 											<button type="submit" class="px-4 py-1 bg-green-500 rounded-md" title="Add developer role">Add</button>
 										<?php endif; ?>
+									</div>
+									<div class="flex items-center gap-2 online-status">
+										<div class="w-5 h-5 <?=$detail["online"] ? "bg-green-500": "bg-red-500" ?> rounded-full indicator"></div>
+										<p><?=$detail["online"] ? "Online" : "Offline"?></p>
 									</div>
 								</form>
 
@@ -769,7 +776,9 @@ if ($deletePostList) {
 		</form>
 	</div>
 
+	<script src="../node_modules/fetch/lib/fetch.js"></script>
 	<script>
+		//ANCHOR JS BEGIN
 		function submit(formName) {
 			document.forms[formName].submit();
 		}
@@ -1051,7 +1060,39 @@ if ($deletePostList) {
 			}
 		}
 
+		<?php if ($_SESSION["loggedIn"]): ?>
+			//Ping to Server to check activity status
+			setInterval(() => {
+				fetch("./", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({active: true})
+				});
+			}, 5000);
+
+			<?php if ($devMode && $userManagement) :?>
+				setInterval(() => {
+					fetch("./?" + new URLSearchParams({
+						activity: "foo",
+					}))
+					.then(response => response.json())
+					.then(data => {
+						data.forEach(user => {
+							const onlineText = document.querySelector(`#${user["username"]} .online-status p`);
+							const onlineIndicator = document.querySelector(`#${user["username"]} .online-status div`);
+							onlineText.innerText = (user["online"] ? "Online" : "Offline")
+							onlineIndicator.style.setProperty("background-color", user["online"] ? "green" : "red", "important");
+						});
+					});
+				}, 5000);
+			<?php endif; ?>
+		<?php endif; ?>
+
+		// ANCHOR JS END
 	</script>
 </body>
 
 </html>
+<?php endif; ?>
