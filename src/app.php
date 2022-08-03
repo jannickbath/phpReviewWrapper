@@ -328,7 +328,7 @@ if ($deletePostList) {
 
 <head>
 	<meta charset="UTF-8">
-	<title>Review - Raumaustatter</title>
+	<title>Review - <?=ucwords(basename($_SESSION["newPage"], ".php"))?></title>
 	<link rel="icon" type="image/png" href="./assets/images/phpReviewWrapper_icon.png" sizes="96x96">
 	<link rel="stylesheet" href="./styles/output.css">
 	<link rel="stylesheet" href="./project/dist/output.min.css">
@@ -348,7 +348,7 @@ if ($deletePostList) {
 		<!-- Login Form -->
 		<div class="grid w-full h-full wrapper place-items-center">
 			<div class="">
-				<h1 class="mb-5 text-3xl text-center text-red-500">Login</h1>
+				<h1 class="mb-5 text-3xl text-center text-red-500">Login - <?=ucwords(strpos($_SERVER["HTTP_HOST"], ".") ? strstr($_SERVER["HTTP_HOST"], ".", true) : $_SERVER["HTTP_HOST"])?></h1>
 				<form action="./" method="POST" name="loginForm" class="grid gap-y-2">
 					<input type="text" name="username" class="form-input dev">
 					<input type="password" name="password" id="" class="form-input dev">
