@@ -256,8 +256,8 @@ foreach ($components as $x) {
 
 //Login
 if (($username && $password)) {
-	if (!$users[$username]["disabled"]) {
-		if ($users[$username]["password"] == $password) {
+	if (isset($users[$username]) ? !$users[$username]["disabled"] : 1) {
+		if (isset($users[$username]) ? $users[$username]["password"] == $password : 0) {
 			$_SESSION["loggedIn"] = true;
 			$_SESSION["username"] = $username;
 		} else {
@@ -363,8 +363,6 @@ include "./activity.php";
 		<?php if (isset($_SESSION["newPage"])) : ?>
 			<!-- TODO Dynamic File Import -->
 			<?php include $_SESSION["newPage"]?>
-		<?php else : ?>
-			<?php include "./project/src/pages/homepage/parsed.php";?>
 		<?php endif; ?>
 	<?php else : ?>
 		<!-- Login Form -->
@@ -816,208 +814,210 @@ include "./activity.php";
 		}
 
 		<?php if (!$fullscreen) : ?>
-			document.querySelectorAll(".close-button").forEach((element) => {
-				element.onclick = (event) => {
-					event.target.parentElement.style.opacity = 0;
+			<?php if ($_SESSION["loggedIn"]) : ?>
+				document.querySelectorAll(".close-button").forEach((element) => {
+					element.onclick = (event) => {
+						event.target.parentElement.style.opacity = 0;
+					}
+				});
+
+				var editActive = false;
+				var toggled = false;
+				var activeElement = "";
+				var itemList = {};
+				var deleteQueue = [];
+				const icons = ["./assets/icons/edit.png", "./assets/icons/cross.png"];
+				const divs = document.querySelectorAll("div");
+
+				document.querySelector(".edit-button").onclick = (event) => {
+					editActive = !editActive;
+
+					//toggle visibility of submit-button
+					if (editActive) {
+						document.querySelector(".submit-button").style.setProperty("display", "block", "important");
+					} else {
+						document.querySelector(".submit-button").style.setProperty("display", "none", "important");
+					}
+
+					//toggle icon src
+					document.querySelector(".edit-button img").src = icons[+editActive];
+
+					//make every ce_element clickable
+					divs.forEach((element) => {
+						element.classList.forEach((classname) => {
+							if (classname.startsWith("ce_")) {
+								element.onclick = () => {
+									if (editActive) {
+										toggled = !toggled;
+										if (toggled) {
+											element.classList.add("red-indicator");
+											if (!(classname in itemList)) {
+												itemList = {
+													...itemList,
+													[classname]: []
+												}
+											}
+											document.querySelector(".message-wrapper").style.setProperty("display", "flex", "important");
+											document.querySelector(".message-wrapper textarea").focus();
+											document.querySelector(".message-wrapper textarea").select();
+											activeElement = classname;
+										} else {
+											element.classList.remove("red-indicator");
+											element.classList.remove("blue-indicator");
+											if (classname in itemList) {
+												delete itemList[classname];
+											}
+											document.querySelector(".message-wrapper").style.setProperty("display", "none", "important");
+										}
+										document.querySelector("#submitForm input").value = JSON.stringify(itemList);
+									}
+								}
+
+								// Shows edited elements
+								if (classname in itemList && element.nextElementSibling.className.split(" ")[0] != "written-message") {
+									element.classList.add("blue-indicator");
+									element.classList.remove("red-indicator");
+
+									var writtenMessage = document.querySelector(".written-message").cloneNode(true);
+									writtenMessage.style.setProperty("display", "block", "important");
+									writtenMessage.querySelector("p").innerText = itemList[classname][0];
+									writtenMessage.querySelector("h5").innerText = `${itemList[classname][1]}'s Message:`;
+									element.parentNode.insertBefore(writtenMessage, element.nextSibling);
+								}
+
+								// Converts cursor to cell-cursor
+								if (editActive) {
+									element.style.setProperty("cursor", "cell");
+								}
+
+								// border-indicator on hover
+								element.onmouseenter = () => {
+									if (editActive) {
+										element.style.setProperty("border", "3px solid yellow", "important");
+									}
+								}
+								element.onmouseleave = () => {
+									if (editActive) {
+										element.style.removeProperty("border");
+									}
+								}
+							}
+						});
+					});
 				}
-			});
 
-			var editActive = false;
-			var toggled = false;
-			var activeElement = "";
-			var itemList = {};
-			var deleteQueue = [];
-			const icons = ["./assets/icons/edit.png", "./assets/icons/cross.png"];
-			const divs = document.querySelectorAll("div");
-
-			document.querySelector(".edit-button").onclick = (event) => {
-				editActive = !editActive;
-
-				//toggle visibility of submit-button
-				if (editActive) {
-					document.querySelector(".submit-button").style.setProperty("display", "block", "important");
-				} else {
-					document.querySelector(".submit-button").style.setProperty("display", "none", "important");
-				}
-
-				//toggle icon src
-				document.querySelector(".edit-button img").src = icons[+editActive];
-
-				//make every ce_element clickable
 				divs.forEach((element) => {
 					element.classList.forEach((classname) => {
 						if (classname.startsWith("ce_")) {
-							element.onclick = () => {
-								if (editActive) {
-									toggled = !toggled;
-									if (toggled) {
-										element.classList.add("red-indicator");
-										if (!(classname in itemList)) {
-											itemList = {
-												...itemList,
-												[classname]: []
-											}
-										}
-										document.querySelector(".message-wrapper").style.setProperty("display", "flex", "important");
-										document.querySelector(".message-wrapper textarea").focus();
-										document.querySelector(".message-wrapper textarea").select();
-										activeElement = classname;
-									} else {
-										element.classList.remove("red-indicator");
-										element.classList.remove("blue-indicator");
-										if (classname in itemList) {
-											delete itemList[classname];
-										}
-										document.querySelector(".message-wrapper").style.setProperty("display", "none", "important");
+							element.style.setProperty("position", "relative", "important");
+
+							const hiddenComps = <?=json_encode($hiddenComps)?>;
+							const elementName = classname.replace("ce_", "");
+
+							<?php if (!$devMode) : ?>
+								if (hiddenComps[elementName] ?? false) {
+									if (<?=$hiddenCompPrevDefault?>) {
+										element.classList.add("hidden-overlay-prev");
+									}else {
+										element.classList.add("hidden-overlay");
 									}
-									document.querySelector("#submitForm input").value = JSON.stringify(itemList);
-								}
-							}
+								} 
+							<?php endif; ?>
 
-							// Shows edited elements
-							if (classname in itemList && element.nextElementSibling.className.split(" ")[0] != "written-message") {
-								element.classList.add("blue-indicator");
-								element.classList.remove("red-indicator");
+							<?php if ($devMode && $utilButtons) : ?>
+								if (hiddenComps[elementName] ?? false) {
+									if (<?=$hiddenCompPrevDeveloper?>) {
+										element.classList.add("hidden-overlay-prev");
+									}else {
+										element.classList.add("hidden-overlay");
+									}
+								} 
 
-								var writtenMessage = document.querySelector(".written-message").cloneNode(true);
-								writtenMessage.style.setProperty("display", "block", "important");
-								writtenMessage.querySelector("p").innerText = itemList[classname][0];
-								writtenMessage.querySelector("h5").innerText = `${itemList[classname][1]}'s Message:`;
-								element.parentNode.insertBefore(writtenMessage, element.nextSibling);
-							}
+								// Wrapper
+								let wrapper = document.createElement("form");
+								wrapper.classList.add("utilButtonWrapper")
+								wrapper.method = "POST";
+								wrapper.action = "./";
 
-							// Converts cursor to cell-cursor
-							if (editActive) {
-								element.style.setProperty("cursor", "cell");
-							}
+								// Hidden Input
+								let hiddenInput = document.createElement("input");
+								hiddenInput.name = "hide-comp";
+								hiddenInput.value = elementName;
+								hiddenInput.classList.add("hidden");
 
-							// border-indicator on hover
-							element.onmouseenter = () => {
-								if (editActive) {
-									element.style.setProperty("border", "3px solid yellow", "important");
-								}
-							}
-							element.onmouseleave = () => {
-								if (editActive) {
-									element.style.removeProperty("border");
-								}
+								// Hide Button
+								let hideButton = document.createElement("button");
+								let hideImg = document.createElement("img");
+								hideImg.src = "./assets/icons/eye.png";
+								hideButton.type = "submit";
+								hideButton.classList.add("hideButton");
+								hideButton.title = "Hide Element";
+
+
+								// Component Wrapper (anchor)
+								let componentWrapper = document.createElement("a");
+								componentWrapper.href = `./project/src/components/${elementName}/${elementName}.html`;
+
+								// Component Button
+								let componentButton = document.createElement("img");
+								componentButton.src = "./assets/icons/puzzle.png";
+								componentButton.classList.add("componentButton");
+								componentButton.title = "View Component";
+
+								if (hiddenComps[elementName] ?? false) {
+									hideImg.src = "./assets/icons/hidden.png";
+									hiddenInput.name = "show-comp";
+								} 
+
+								wrapper.appendChild(hiddenInput);
+								hideButton.appendChild(hideImg);
+								element.appendChild(wrapper);
+								wrapper.appendChild(hideButton);
+								wrapper.appendChild(componentWrapper);
+								componentWrapper.appendChild(componentButton);
+							<?php endif; ?>
+						}
+					});
+				});
+
+				// Submit Message
+				document.getElementById("submit-message").onclick = (e) => {
+					const messageBoxVal = document.getElementById("message-bug").value;
+					const messageWrapper = document.querySelector(".message-wrapper");
+
+					itemList[activeElement] = [messageBoxVal, '<?= $_SESSION["username"]; ?>'];
+					messageWrapper.style.removeProperty("display", "none", "important");
+
+					document.querySelector("#submitForm input").value = JSON.stringify(itemList);
+				}
+
+				//Adds selected posts to delete queue
+				document.querySelectorAll(".delete-post").forEach(button => {
+					button.onclick = (e) => {
+						const id = e.target.parentElement.querySelector("span.hidden").innerText;
+						if (!deleteQueue.includes(id)) {
+							deleteQueue.push(id);
+						}
+						e.target.parentElement.style.setProperty("background-color", "red", "important");
+
+						if (deleteQueue.length > 0) {
+							document.getElementById("confirm-delete").style.setProperty("display", "block", "important");
+						}
+						document.getElementById("delete-post-list").value = deleteQueue;
+					}
+				});
+
+				// Add Id's for each content element (for navigation) -> see forum
+				divs.forEach((element) => {
+					element.classList.forEach((classname) => {
+						if (classname.startsWith("ce_")) {
+							if (!document.getElementById(classname) ?? false) {
+								element.setAttribute("id", classname);
 							}
 						}
 					});
 				});
-			}
-
-			divs.forEach((element) => {
-				element.classList.forEach((classname) => {
-					if (classname.startsWith("ce_")) {
-						element.style.setProperty("position", "relative", "important");
-
-						const hiddenComps = <?=json_encode($hiddenComps)?>;
-						const elementName = classname.replace("ce_", "");
-
-						<?php if (!$devMode) : ?>
-							if (hiddenComps[elementName] ?? false) {
-								if (<?=$hiddenCompPrevDefault?>) {
-									element.classList.add("hidden-overlay-prev");
-								}else {
-									element.classList.add("hidden-overlay");
-								}
-							} 
-						<?php endif; ?>
-
-						<?php if ($devMode && $utilButtons) : ?>
-							if (hiddenComps[elementName] ?? false) {
-								if (<?=$hiddenCompPrevDeveloper?>) {
-									element.classList.add("hidden-overlay-prev");
-								}else {
-									element.classList.add("hidden-overlay");
-								}
-							} 
-
-							// Wrapper
-							let wrapper = document.createElement("form");
-							wrapper.classList.add("utilButtonWrapper")
-							wrapper.method = "POST";
-							wrapper.action = "./";
-
-							// Hidden Input
-							let hiddenInput = document.createElement("input");
-							hiddenInput.name = "hide-comp";
-							hiddenInput.value = elementName;
-							hiddenInput.classList.add("hidden");
-
-							// Hide Button
-							let hideButton = document.createElement("button");
-							let hideImg = document.createElement("img");
-							hideImg.src = "./assets/icons/eye.png";
-							hideButton.type = "submit";
-							hideButton.classList.add("hideButton");
-							hideButton.title = "Hide Element";
-
-
-							// Component Wrapper (anchor)
-							let componentWrapper = document.createElement("a");
-							componentWrapper.href = `./project/src/components/${elementName}/${elementName}.html`;
-
-							// Component Button
-							let componentButton = document.createElement("img");
-							componentButton.src = "./assets/icons/puzzle.png";
-							componentButton.classList.add("componentButton");
-							componentButton.title = "View Component";
-
-							if (hiddenComps[elementName] ?? false) {
-								hideImg.src = "./assets/icons/hidden.png";
-								hiddenInput.name = "show-comp";
-							} 
-
-							wrapper.appendChild(hiddenInput);
-							hideButton.appendChild(hideImg);
-							element.appendChild(wrapper);
-							wrapper.appendChild(hideButton);
-							wrapper.appendChild(componentWrapper);
-							componentWrapper.appendChild(componentButton);
-						<?php endif; ?>
-					}
-				});
-			});
-
-			// Submit Message
-			document.getElementById("submit-message").onclick = (e) => {
-				const messageBoxVal = document.getElementById("message-bug").value;
-				const messageWrapper = document.querySelector(".message-wrapper");
-
-				itemList[activeElement] = [messageBoxVal, '<?= $_SESSION["username"]; ?>'];
-				messageWrapper.style.removeProperty("display", "none", "important");
-
-				document.querySelector("#submitForm input").value = JSON.stringify(itemList);
-			}
-
-			//Adds selected posts to delete queue
-			document.querySelectorAll(".delete-post").forEach(button => {
-				button.onclick = (e) => {
-					const id = e.target.parentElement.querySelector("span.hidden").innerText;
-					if (!deleteQueue.includes(id)) {
-						deleteQueue.push(id);
-					}
-					e.target.parentElement.style.setProperty("background-color", "red", "important");
-
-					if (deleteQueue.length > 0) {
-						document.getElementById("confirm-delete").style.setProperty("display", "block", "important");
-					}
-					document.getElementById("delete-post-list").value = deleteQueue;
-				}
-			});
-
-			// Add Id's for each content element (for navigation) -> see forum
-			divs.forEach((element) => {
-				element.classList.forEach((classname) => {
-					if (classname.startsWith("ce_")) {
-						if (!document.getElementById(classname) ?? false) {
-							element.setAttribute("id", classname);
-						}
-					}
-				});
-			});
+			<?php endif; ?>
 		<?php endif ;?>
 
 
