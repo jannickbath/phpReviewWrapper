@@ -376,7 +376,7 @@ include "./activity.php";
 				</form>
 				<?php if ($wrongData) : ?>
 					<!-- Alert Wrong Data-->
-					<div class="absolute bottom-0 right-0 px-6 py-3 transition-opacity bg-red-400 rounded-lg alert slide-top">
+					<div class="absolute bottom-0 right-0 px-6 py-3 transition-opacity bg-red-400 rounded-lg alert slide-top-dev z-[50]">
 						<p>Es ist etwas schiefgelaufen! Bitte überprüfen sie ihre Eingabe.</p>
 						<button class="absolute top-0 right-2 close-button">
 							x
@@ -385,7 +385,7 @@ include "./activity.php";
 				<?php endif; ?>
 				<?php if ($disabled) : ?>
 					<!-- Alert Wrong Data-->
-					<div class="absolute bottom-0 right-0 px-6 py-3 transition-opacity bg-orange-400 rounded-lg alert slide-top">
+					<div class="absolute bottom-0 right-0 px-6 py-3 transition-opacity bg-orange-400 rounded-lg alert slide-top-dev z-[50]">
 						<p>Ihr Benutzer ist derzeit deaktiviert! Bitte wenden sie sich an einen Administrator.</p>
 						<button class="absolute top-0 right-2 close-button">
 							x
@@ -814,13 +814,13 @@ include "./activity.php";
 		}
 
 		<?php if (!$fullscreen) : ?>
-			<?php if ($_SESSION["loggedIn"]) : ?>
-				document.querySelectorAll(".close-button").forEach((element) => {
-					element.onclick = (event) => {
-						event.target.parentElement.style.opacity = 0;
-					}
-				});
+			document.querySelectorAll(".close-button").forEach((element) => {
+				element.onclick = (event) => {
+					event.target.parentElement.style.setProperty("opacity", "0", "important");
+				}
+			});
 
+			<?php if ($_SESSION["loggedIn"]) : ?>
 				var editActive = false;
 				var toggled = false;
 				var activeElement = "";

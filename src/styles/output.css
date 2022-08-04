@@ -775,6 +775,10 @@ video {
   bottom: 0.5rem !important;
 }
 
+.z-\[50\] {
+  z-index: 50 !important;
+}
+
 .z-\[99999\] {
   z-index: 99999 !important;
 }
@@ -1231,7 +1235,7 @@ body, html {
   Twitter: @xsgames_
 ---------------------------------------------- */
 
-.slide-top{
+.slide-top-dev{
   -webkit-animation:slide-top 0.2s linear both;
           animation:slide-top 0.2s linear both
 }
@@ -1256,7 +1260,7 @@ body, html {
   }
 }
 
-.slide-bottom{
+.slide-bottom-dev{
   -webkit-animation:slide-bottom 0.2s linear both;
           animation:slide-bottom 0.2s linear both
 }

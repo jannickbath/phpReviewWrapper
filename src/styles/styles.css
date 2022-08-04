@@ -14,8 +14,8 @@ body, html {
   URL: https://xsgames.co/animatiss
   Twitter: @xsgames_
 ---------------------------------------------- */
-.slide-top{animation:slide-top 0.2s linear both}@keyframes slide-top{0%{transform:translateY(50px)}100%{transform:translateY(0px)}}
-.slide-bottom{animation:slide-bottom 0.2s linear both}@keyframes slide-bottom{0%{transform:translateY(-100px)}100%{transform:translateY(0)}}
+.slide-top-dev{animation:slide-top 0.2s linear both}@keyframes slide-top{0%{transform:translateY(50px)}100%{transform:translateY(0px)}}
+.slide-bottom-dev{animation:slide-bottom 0.2s linear both}@keyframes slide-bottom{0%{transform:translateY(-100px)}100%{transform:translateY(0)}}
 
 .red-indicator::after {
   content: "";
