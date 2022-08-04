@@ -1079,21 +1079,20 @@ include "./activity.php";
 				});
 		<?php endif; ?>
 
-		const prevPageForm = document.querySelector("#navigate-page-previous");
-		const nextPageForm = document.querySelector("#navigate-page-next");
-
-		document.onkeydown = (e) => {
-			if (e.code == "ArrowRight") {
-				nextPageForm.submit();
-			} 
-			
-			if (e.code == "ArrowLeft") {
-				prevPageForm.submit();
-			}
-		}
 
 		<?php if ($_SESSION["loggedIn"]): ?>
+			const prevPageForm = document.querySelector("#navigate-page-previous");
+			const nextPageForm = document.querySelector("#navigate-page-next");
 
+			document.onkeydown = (e) => {
+				if (e.code == "ArrowRight") {
+					nextPageForm.submit();
+				} 
+				
+				if (e.code == "ArrowLeft") {
+					prevPageForm.submit();
+				}
+			}
 			//Ping to Server to check activity status
 			setInterval(() => {
 				let viewPortWidth = window.getComputedStyle(document.querySelector("html")).width;
