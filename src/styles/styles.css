@@ -5,6 +5,7 @@
 body, html {
     height: 100%;
     scroll-padding-top: 6rem;
+    overflow-x: hidden;
 }
 
     /* ----------------------------------------------
@@ -126,4 +127,20 @@ body, html {
   display: grid;
   place-items: center;
   border: 2px solid black;
+}
+
+.viewportEmulation {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: 5px solid limegreen;
+  transform: translateX(-50%) translateY(-50%);
+  display: none;
+}
+
+.viewportEmulation .username {
+  position: absolute;
+  top: 0;
+  font-size: 20px;
+  color: limegreen;
 }

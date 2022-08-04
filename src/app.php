@@ -13,6 +13,8 @@ $deletePostList = $_POST["delete-post-list"] ?? false;
 $_SESSION["loggedIn"] = ($_SESSION["loggedIn"] ?? false);
 $_SESSION["username"] = ($_SESSION["username"] ?? false);
 
+$_SESSION["spectate"] = ($_SESSION["spectate"] ?? null);
+
 $_SESSION["newPage"] = ($_SESSION["newPage"] ?? null);
 
 $fullscreen = isset($_POST["fullscreen-mode"]) ?? false;
@@ -33,6 +35,7 @@ $user_id = $_POST["user_id"] ?? null;
 $addUser = $_POST["add-user"] ?? null;
 $addDeveloper = isset($_POST["add-developer"]) ?? false;
 $deleteUser = $_POST["delete-user"] ?? null;
+$spectate = $_SESSION["spectate"];
 
 // Component Management
 $hideComp = $_POST["hide-comp"] ?? null;
@@ -109,7 +112,7 @@ $entries = $db_users->query("SELECT * FROM users");
 $users = [];
 
 while ($row = $entries->fetchArray()) {
-	$users[$row["username"]] = ["password" => $row["password"], "disabled" => $row["disabled"], "developer" => $row["developer"], "id" => $row["id"], "position" => $row["position"], "online" => $row["online"], "lastping" => $row["lastping"]];
+	$users[$row["username"]] = ["password" => $row["password"], "disabled" => $row["disabled"], "developer" => $row["developer"], "id" => $row["id"], "position" => $row["position"], "online" => $row["online"], "lastping" => $row["lastping"], "page" => $row["page"]];
 }
 
 // Fetch hidden Comps 
@@ -273,8 +276,17 @@ if ($_SESSION["loggedIn"]) {
 	}
 }
 
+if (isset($_POST["spectate"])) {
+	if (isset($_SESSION["spectate"])) {
+		$_SESSION["spectate"] = null;
+	}else {
+		$_SESSION["spectate"] = $_POST["spectate"];
+	}
+	$spectate = $_SESSION["spectate"];
+}
+
 // Page
-if ($_POST["navigate-page"] != "") {
+if (($_POST["navigate-page"] ?? null) != "") {
 	$_SESSION["newPage"] = $_POST["navigate-page"];
 }else if (isset($_POST["navigate-page"]) && $_POST["navigate-page"] == "") {
 	$siteOutOfRange = true;
@@ -695,6 +707,16 @@ include "./activity.php";
 									</div>
 								</form>
 
+								<!-- Spectate -->
+								<?php if ($username != $_SESSION["username"] && $detail["online"]): ?>
+									<form method="POST" action="./" class="flex px-2 py-1 <?=isset($spectate) ? "bg-red-500": "bg-green-500"?> rounded-md cursor-pointer h-fit" title="<?=isset($spectate) ? "stop spectating": "spectate"?>" class="spectate-form">
+										<button type="submit">
+											<img src="./assets/icons/<?=isset($spectate) ? "hidden.png" : "eye.png"?>" alt="" class="w-7 h-7">
+										</button>
+										<input type="text" hidden name="spectate" class="spectate-input" value="<?=$detail['id']?>">
+									</form>
+								<?php endif; ?>
+
 								<?php if ($username != $_SESSION["username"]) : ?>
 								<div class="absolute right-0 flex gap-2 button-section">
 									<form action="./" method="POST">
@@ -775,6 +797,16 @@ include "./activity.php";
 			<input type="text">
 		</form>
 	</div>
+
+	<!-- Emulate Specific Viewport -->
+	<?php if (isset($spectate)): ?>
+		<div class="viewportEmulation">
+			<p class="username">Username</p>
+		</div>
+		<form action="./" method="POST" id="spectatePageNavigation" class="hidden">
+			<input type="text" value="" class="navigation-input" name="navigate-page" hidden>
+		</form>
+	<?php endif; ?>
 
 	<script src="../node_modules/fetch/lib/fetch.js"></script>
 	<script>
@@ -1061,18 +1093,25 @@ include "./activity.php";
 		}
 
 		<?php if ($_SESSION["loggedIn"]): ?>
+
 			//Ping to Server to check activity status
 			setInterval(() => {
+				let viewPortWidth = window.getComputedStyle(document.querySelector("html")).width;
+				let viewPortHeight = window.getComputedStyle(document.querySelector("html")).height;
+
+				viewPortWidth = viewPortWidth;
+				viewPortHeight = viewPortHeight;
+
 				fetch("./", {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json"
 					},
-					body: JSON.stringify({active: true})
+					body: JSON.stringify({active: true, position: {width: viewPortWidth, height: viewPortHeight}})
 				});
 			}, 5000);
 
-			<?php if ($devMode && $userManagement) :?>
+			<?php if ($devMode) :?>
 				setInterval(() => {
 					fetch("./?" + new URLSearchParams({
 						activity: "foo",
@@ -1080,13 +1119,41 @@ include "./activity.php";
 					.then(response => response.json())
 					.then(data => {
 						data.forEach(user => {
-							const onlineText = document.querySelector(`#${user["username"]} .online-status p`);
-							const onlineIndicator = document.querySelector(`#${user["username"]} .online-status div`);
-							onlineText.innerText = (user["online"] ? "Online" : "Offline")
-							onlineIndicator.style.setProperty("background-color", user["online"] ? "green" : "red", "important");
+							<?php if ($userManagement) : ?>
+								const onlineText = document.querySelector(`#${user["username"]} .online-status p`);
+								const onlineIndicator = document.querySelector(`#${user["username"]} .online-status div`);
+								onlineText.innerText = (user["online"] ? "Online" : "Offline");
+								onlineIndicator.style.setProperty("background-color", user["online"] ? "green" : "red", "important");
+							<?php endif; ?>
+
+
+							<?php if (isset($spectate)): ?>
+								const viewportEmulation = document.querySelector(".viewportEmulation");
+								if (user["id"] == <?=$spectate?>) {
+									if (user["online"]) {
+										let position = user["position"].split(",");
+										const navigationForm = document.querySelector("#spectatePageNavigation");
+										const navigationInput = navigationForm.querySelector(".navigation-input");
+
+										viewportEmulation.style.setProperty("display", "block", "important");
+										viewportEmulation.querySelector("p").innerText = `${user["username"]} (${position[0]} x ${position[1]})`;
+
+										viewportEmulation.style.width = position[0]; 
+										viewportEmulation.style.height = position[1]; 
+
+										if ('<?=$_SESSION["newPage"]?>' != user["page"]) {
+											navigationInput.value = user["page"];
+											navigationForm.submit();
+										}
+
+									}else {
+										viewportEmulation.style.setProperty("display", "none", "important");
+									}
+								}
+							<?php endif; ?>
 						});
 					});
-				}, 5000);
+				}, 2000);
 			<?php endif; ?>
 		<?php endif; ?>
 

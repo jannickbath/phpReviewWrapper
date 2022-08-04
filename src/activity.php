@@ -2,21 +2,25 @@
     // Activity Tracker (Ping-System)
     $data = json_decode(file_get_contents('php://input'), true);
     $time = time();
+
     $username = $_SESSION["username"];
+    $currentPage = $_SESSION["newPage"];
 
     if (isset($_POST["navigate-page"])) {
-        $db_users->exec("UPDATE users SET lastping=$time, online=1 WHERE username='$username'");
+        $db_users->exec("UPDATE users SET lastping=$time, online=1, page='$currentPage' WHERE username='$username'");
     }
 
     if (isset($data["active"])) {
-        $db_users->exec("UPDATE users SET lastping=$time, online=1 WHERE username='$username'");
+        $clientWidth = $data["position"]["width"];
+        $clientHeight = $data["position"]["height"];
+        $db_users->exec("UPDATE users SET lastping=$time, online=1, page='$currentPage', position='$clientWidth, $clientHeight' WHERE username='$username'");
     }
 
     if (isset($_GET["activity"])) {
         $userOnlineStates = [];
 
         foreach ($users as $username => $data) {
-            $userOnlineStates = [...$userOnlineStates, ["online" => $data["online"], "username" => $username]];
+            $userOnlineStates = [...$userOnlineStates, ["online" => $data["online"], "username" => $username, "position" => $data["position"], "id" => $data["id"], "page" => $data["page"]]];
         }
 
         $json = json_encode($userOnlineStates);
