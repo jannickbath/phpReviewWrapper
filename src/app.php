@@ -1097,18 +1097,16 @@ include "./activity.php";
 			setInterval(() => {
 				let viewPortWidth = window.getComputedStyle(document.querySelector("html")).width;
 				let viewPortHeight = window.getComputedStyle(document.querySelector("html")).height;
-
-				viewPortWidth = viewPortWidth;
-				viewPortHeight = viewPortHeight;
+				let pixelsScrolled = document.body.scrollTop;
 
 				fetch("./", {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json"
 					},
-					body: JSON.stringify({active: true, position: {width: viewPortWidth, height: viewPortHeight}})
+					body: JSON.stringify({active: true, position: {width: viewPortWidth, height: viewPortHeight, scroll: pixelsScrolled}})
 				});
-			}, 5000);
+			}, 1950);
 
 			<?php if ($devMode) :?>
 				setInterval(() => {
@@ -1136,9 +1134,11 @@ include "./activity.php";
 
 										viewportEmulation.style.setProperty("display", "block", "important");
 										viewportEmulation.querySelector("p").innerText = `${user["username"]} (${position[0]} x ${position[1]})`;
+										console.log(user);
 
 										viewportEmulation.style.width = position[0]; 
 										viewportEmulation.style.height = position[1]; 
+										document.body.scrollTo(0, parseInt(position[2]));
 
 										if ('<?=$_SESSION["newPage"]?>' != user["page"]) {
 											navigationInput.value = user["page"];

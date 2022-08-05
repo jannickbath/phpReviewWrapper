@@ -13,7 +13,8 @@
     if (isset($data["active"])) {
         $clientWidth = $data["position"]["width"];
         $clientHeight = $data["position"]["height"];
-        $db_users->exec("UPDATE users SET lastping=$time, online=1, page='$currentPage', position='$clientWidth, $clientHeight' WHERE username='$username'");
+        $scrolled = $data["position"]["scroll"];
+        $db_users->exec("UPDATE users SET lastping=$time, online=1, page='$currentPage', position='$clientWidth, $clientHeight, $scrolled' WHERE username='$username'");
     }
 
     if (isset($_GET["activity"])) {
@@ -32,7 +33,7 @@
 
     foreach ($users as $username => $data) {
         if ($data["online"]) {
-            if ($time - $data["lastping"] > 10 && $data["lastping"] != 0) {
+            if ($time - $data["lastping"] > 5 && $data["lastping"] != 0) {
                 $db_users->exec("UPDATE users SET online=0 WHERE username='$username'");
             }
         }
