@@ -9,5 +9,6 @@
         "default": 0,
         "developer": 1
     },
-    "fill-forms": 0 
+    "fill-forms": 0,
+    "activity-tool": 1 
 }

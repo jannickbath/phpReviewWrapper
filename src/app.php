@@ -44,15 +44,16 @@ $showComp = $_POST["show-comp"] ?? null;
 // Project Info
 $pInfoJSON = file_get_contents("./project_config.json");
 $pInfo = json_decode($pInfoJSON, true);
-$ticketUrl = $pInfo["ticket"];
-$designUrl = $pInfo["design"];
-$designUrl_mobile = $pInfo["design-mobile"];
+$ticketUrl = $pInfo["ticket"] ?? "";
+$designUrl = $pInfo["design"] ?? "";
+$designUrl_mobile = $pInfo["design-mobile"] ?? "";
 $utilButtons = $pInfo["util-buttons"] ?? 1;
 $fullscreenMode = $pInfo["fullscreen-mode"] ?? 0;
 $fillForms = $pInfo["fill-forms"] ?? 1;
 
 $hiddenCompPrevDefault = $pInfo["hidden-comp-preview"]["default"] ?? 0;
 $hiddenCompPrevDeveloper = $pInfo["hidden-comp-preview"]["developer"] ?? 1;
+$activityTool = $pInfo["activity-tool"] ?? 1;
 
 // Database (Users)
 $db_users = new SQLite3("./database/users.db");
@@ -339,7 +340,9 @@ if ($deletePostList) {
 	}
 }
 
-include "./activity.php";
+if ($activityTool) {
+	include "./activity.php";
+}
 
 // ANCHOR PHP END
 
@@ -699,14 +702,16 @@ include "./activity.php";
 											<button type="submit" class="px-4 py-1 bg-green-500 rounded-md" title="Add developer role">Add</button>
 										<?php endif; ?>
 									</div>
-									<div class="flex items-center gap-2 online-status">
-										<div class="w-5 h-5 <?=$detail["online"] ? "bg-green-500": "bg-red-500" ?> rounded-full indicator"></div>
-										<p><?=$detail["online"] ? "Online" : "Offline"?></p>
-									</div>
+									<?php if($activityTool): ?>
+										<div class="flex items-center gap-2 online-status">
+											<div class="w-5 h-5 <?=$detail["online"] ? "bg-green-500": "bg-red-500" ?> rounded-full indicator"></div>
+											<p><?=$detail["online"] ? "Online" : "Offline"?></p>
+										</div>
+									<?php endif; ?>
 								</form>
 
 								<!-- Spectate -->
-								<?php if ($username != $_SESSION["username"] && $detail["online"]): ?>
+								<?php if ($username != $_SESSION["username"] && $detail["online"] && $activityTool): ?>
 									<form method="POST" action="./" class="flex px-2 py-1 <?=isset($spectate) ? "bg-red-500": "bg-green-500"?> rounded-md cursor-pointer h-fit" title="<?=isset($spectate) ? "stop spectating": "spectate"?>" class="spectate-form">
 										<button type="submit">
 											<img src="./assets/icons/<?=isset($spectate) ? "hidden.png" : "eye.png"?>" alt="" class="w-7 h-7">
@@ -1093,66 +1098,71 @@ include "./activity.php";
 					prevPageForm.submit();
 				}
 			}
-			//Ping to Server to check activity status
-			setInterval(() => {
-				let viewPortWidth = window.getComputedStyle(document.querySelector("html")).width;
-				let viewPortHeight = window.getComputedStyle(document.querySelector("html")).height;
-				let pixelsScrolled = document.body.scrollTop;
 
-				fetch("./", {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json"
-					},
-					body: JSON.stringify({active: true, position: {width: viewPortWidth, height: viewPortHeight, scroll: pixelsScrolled}})
-				});
-			}, 1950);
+			<?php if ($activityTool): ?>
+				//Ping to Server to check activity status
+				setInterval(() => {
+					let viewPortWidth = window.getComputedStyle(document.querySelector("html")).width;
+					let viewPortHeight = window.getComputedStyle(document.querySelector("html")).height;
+					let pixelsScrolled = document.body.scrollTop;
+
+					fetch("./", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json"
+						},
+						body: JSON.stringify({active: true, position: {width: viewPortWidth, height: viewPortHeight, scroll: pixelsScrolled}})
+					});
+				}, 1950);
+			<?php endif; ?>
 
 			<?php if ($devMode) :?>
-				setInterval(() => {
-					fetch("./?" + new URLSearchParams({
-						activity: "foo",
-					}))
-					.then(response => response.json())
-					.then(data => {
-						data.forEach(user => {
-							<?php if ($userManagement) : ?>
-								const onlineText = document.querySelector(`#${user["username"]} .online-status p`);
-								const onlineIndicator = document.querySelector(`#${user["username"]} .online-status div`);
-								onlineText.innerText = (user["online"] ? "Online" : "Offline");
-								onlineIndicator.style.setProperty("background-color", user["online"] ? "green" : "red", "important");
-							<?php endif; ?>
+				<?php if ($activityTool): ?>
+					setInterval(() => {
+						fetch("./?" + new URLSearchParams({
+							activity: "foo",
+						}))
+						.then(response => response.json())
+						.then(data => {
+							data.forEach(user => {
+								<?php if ($userManagement) : ?>
+									const onlineText = document.querySelector(`#${user["username"]} .online-status p`);
+									const onlineIndicator = document.querySelector(`#${user["username"]} .online-status div`);
+									onlineText.innerText = (user["online"] ? "Online" : "Offline");
+									onlineIndicator.style.setProperty("background-color", user["online"] ? "green" : "red", "important");
+								<?php endif; ?>
 
 
-							<?php if (isset($spectate)): ?>
-								const viewportEmulation = document.querySelector(".viewportEmulation");
-								if (user["id"] == <?=$spectate?>) {
-									if (user["online"]) {
-										let position = user["position"].split(",");
-										const navigationForm = document.querySelector("#spectatePageNavigation");
-										const navigationInput = navigationForm.querySelector(".navigation-input");
+								<?php if (isset($spectate)): ?>
+									const viewportEmulation = document.querySelector(".viewportEmulation");
+									if (user["id"] == <?=$spectate?>) {
+										if (user["online"]) {
+											let position = user["position"].split(",");
+											const navigationForm = document.querySelector("#spectatePageNavigation");
+											const navigationInput = navigationForm.querySelector(".navigation-input");
 
-										viewportEmulation.style.setProperty("display", "block", "important");
-										viewportEmulation.querySelector("p").innerText = `${user["username"]} (${position[0]} x ${position[1]})`;
-										console.log(user);
+											viewportEmulation.style.setProperty("display", "block", "important");
+											viewportEmulation.querySelector("p").innerText = `${user["username"]} (${position[0]} x ${position[1]})`;
+											console.log(user);
 
-										viewportEmulation.style.width = position[0]; 
-										viewportEmulation.style.height = position[1]; 
-										document.body.scrollTo(0, parseInt(position[2]));
+											viewportEmulation.style.width = position[0]; 
+											viewportEmulation.style.height = position[1]; 
+											document.body.scrollTo(0, parseInt(position[2]));
 
-										if ('<?=$_SESSION["newPage"]?>' != user["page"]) {
-											navigationInput.value = user["page"];
-											navigationForm.submit();
+											if ('<?=$_SESSION["newPage"]?>' != user["page"]) {
+												navigationInput.value = user["page"];
+												navigationForm.submit();
+											}
+
+										}else {
+											viewportEmulation.style.setProperty("display", "none", "important");
 										}
-
-									}else {
-										viewportEmulation.style.setProperty("display", "none", "important");
 									}
-								}
-							<?php endif; ?>
+								<?php endif; ?>
+							});
 						});
-					});
-				}, 2000);
+					}, 2000);
+				<?php endif; ?>
 			<?php endif; ?>
 		<?php endif; ?>
 
