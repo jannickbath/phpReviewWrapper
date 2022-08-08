@@ -47,6 +47,7 @@ $pInfo = json_decode($pInfoJSON, true);
 $ticketUrl = $pInfo["ticket"] ?? "";
 $designUrl = $pInfo["design"] ?? "";
 $designUrl_mobile = $pInfo["design-mobile"] ?? "";
+$designUrl_tablet = $pInfo["design-tablet"] ?? "";
 $utilButtons = $pInfo["util-buttons"] ?? 1;
 $fullscreenMode = $pInfo["fullscreen-mode"] ?? 0;
 $fillForms = $pInfo["fill-forms"] ?? 1;
@@ -418,7 +419,12 @@ if ($activityTool) {
 				<!-- Design -->
 				<div class="flex flex-row-reverse gap-2 group">
 					<a class="p-2 mx-auto bg-red-200 rounded-md hover:bg-red-400" href="<?=$designUrl?>" rel="noopener noreferrer" target="_blank">Design</a>
-					<a class="hidden p-2 mx-auto bg-red-200 rounded-md hover:bg-red-400 group-hover:block" href="<?=$designUrl_mobile?>" rel="noopener noreferrer" target="_blank" class="">Design - Mobile</a>
+					<?php if ($designUrl_mobile != "") : ?>
+						<a class="hidden p-2 mx-auto bg-red-200 rounded-md hover:bg-red-400 group-hover:block" href="<?=$designUrl_mobile?>" rel="noopener noreferrer" target="_blank" class="">Design - Mobile</a>
+					<?php endif; ?>
+					<?php if ($designUrl_tablet != "") : ?>
+						<a class="hidden p-2 mx-auto bg-red-200 rounded-md hover:bg-red-400 group-hover:block" href="<?=$designUrl_tablet?>" rel="noopener noreferrer" target="_blank" class="">Design - Tablet</a>
+					<?php endif; ?>
 				</div>
 			<?php endif; ?>
 

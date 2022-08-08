@@ -2,6 +2,7 @@
     "_comment": "Here you can disable/enable some features and add additional links",
     "design": "",
     "design-mobile": "",
+    "design-tablet": "",
     "ticket": "",
     "util-buttons": 1,
     "fullscreen-mode": 0,
